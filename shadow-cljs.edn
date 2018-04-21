@@ -1,0 +1,19 @@
+{:lein   true                                               ; let lein/project.clj manage source-paths and deps
+ :builds {:devcards {:target     :browser
+                     :output-dir "resources/public/devcards" ; where does compilation output go
+                     :asset-path "/devcards"                ; sets path to comiled assets in loader script
+                     :modules    {:main {:entries [viz.devcards]}}
+                     ; :devcards true is supposed to add preloads and calls start-devcard-ui! but not so for now
+                     :dev        {:compiler-options {:devcards true}}
+                     :devtools   {:http-root "resources/public"
+                                  :http-port 8280
+                                  :autoload  true           ; defaults true for :browser target
+                                  :preloads  [devcards.core]}}
+
+          :app      {:target     :browser
+                     :output-dir "resources/public/app"     ; where does compilation output go
+                     :asset-path "/app"                     ; sets path to comiled assets in loader script
+                     :modules    {:main {:entries [viz.app]}}
+                     :devtools   {:http-root "resources/public"
+                                  :http-port 8290}}}}
+
