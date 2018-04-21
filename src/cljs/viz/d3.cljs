@@ -16,7 +16,7 @@
                   (append "svg")
                   (attr "width" svg-width)
                   (attr "height" svg-height))
-          margin {:top 20 :right 20 :bottom 20 :left 70}
+          margin {:top 20 :right 20 :bottom 50 :left 70}
           width (- svg-width (:left margin) (:right margin))
           height (- svg-height (:top margin) (:bottom margin))
           x (.. d3 scaleLinear
@@ -52,7 +52,13 @@
           (call (.. d3
                     (axisBottom x)
                     (ticks 5)
-                    (tickFormat (fn [i] (str i "kb"))))))
+                    (tickFormat (fn [i] (str i "kb")))))
+          ; rotate labels
+          (selectAll "text")
+          (attr "x" 10)
+          (attr "y" 5)
+          (attr "transform" "rotate(60)")
+          (style "text-anchor" "start"))
 
       ; y-axis
       (.. g
@@ -148,6 +154,7 @@
         (animate animation-duration))
       nil)))
 
+; TODO pass in the faux so it can be re-used for transitions
 (def Container
   (create-class
     #js {:componentDidMount didMount
