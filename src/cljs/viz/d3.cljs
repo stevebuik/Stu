@@ -8,6 +8,74 @@
 
 ;;;; CHARTS ;;;;
 
+(defn bar-chart-horizontal!
+  "HOF returning a fn that mutates a dom div, adding a d3 bar chart"
+  [svg-width svg-height data {:keys [on-click]}]
+  (fn [chart-div]
+    (let [svg (.. d3 (select chart-div)
+                  (append "svg")
+                  (attr "width" svg-width)
+                  (attr "height" svg-height))
+          margin {:top 20 :right 20 :bottom 20 :left 70}
+          width (- svg-width (:left margin) (:right margin))
+          height (- svg-height (:top margin) (:bottom margin))
+          x (.. d3 scaleLinear
+                (domain (clj->js [0 (reduce max (map second data))])) ; input
+                (range #js [0 width]))                      ; output
+          y (.. d3 scaleLinear
+                (domain (clj->js [0 (count data)]))
+                (range #js [0 height]))
+          g (.. svg
+                (append "g")
+                (attr "transform" (str "translate(" (:left margin) "," (:top margin) ")")))
+          data-indexed (clj->js (map-indexed #(conj %2 %1) data))]
+
+      (let [bars (.. g
+                     (selectAll ".bar")
+                     (data data-indexed))
+            new-bars (.. bars
+                         (enter)
+                         (append "rect")
+                         (attr "class" "bar")
+                         (attr "x" 0)
+                         (attr "y" (fn [d] (y (last d))))   ; use index for y position
+                         (attr "width" 0)                   ; let animation change widths
+                         (attr "height" (- (/ height (count data)) 1)))]
+        (when on-click
+          (.. new-bars
+              (on "click" on-click))))
+
+      ; x-axis
+      (.. g
+          (append "g")
+          (attr "transform" (str "translate(0," height ")"))
+          (call (.. d3
+                    (axisBottom x)
+                    (ticks 5)
+                    (tickFormat (fn [i] (str i "kb"))))))
+
+      ; y-axis
+      (.. g
+          (append "g")
+          (call (.. d3
+                    (axisLeft y)
+                    (tickSize 0)                            ; don't show tick lines
+                    (tickPadding 5)                         ; space to left and right of tick labels
+                    (tickFormat (fn [i] (get-in data [i 0])))))
+          (selectAll "text")
+          ; below pushes label down to middle of bar
+          (attr "dy" "1em"))
+
+      ; transition from zero width (above) to actual width
+      (.. g
+          (selectAll ".bar")
+          (data data-indexed)
+          (transition)
+          (duration 500)
+          (attr "width" (fn [d i] (x (second d))))))
+    ; return nothing : side-effecting
+    nil))
+
 (defn tree-map!
   "HOF returning a fn that mutates a dom div, adding a d3 tree-map"
   [svg-width svg-height data {:keys [transition-duration]}]

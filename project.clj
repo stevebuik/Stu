@@ -2,7 +2,8 @@
   :description "Visualise builds of Clojurescript artifacts"
   :license {:name "Eclipse Public License"
             :url  "http://www.eclipse.org/legal/epl-v10.html"}
-  :dependencies [[org.clojure/clojure "1.9.0"]]
+  :dependencies [[org.clojure/clojure "1.9.0"]
+                 [sablono "0.8.3"]]
 
   :clean-targets ^{:protect false} ["resources/public/app"
                                     "resources/public/devcards"

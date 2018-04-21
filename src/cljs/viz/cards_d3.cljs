@@ -1,15 +1,30 @@
 (ns viz.cards-d3
   (:require
     [cljs.pprint :refer [pprint]]
-    [devcards.core :as dc
-     :include-macros true
-     :refer-macros [defcard defcard-doc deftest]]
-    [viz.d3 :as d3]))
+    [sablono.core :include-macros true :refer [html]]
+    [devcards.core :as dc :include-macros true :refer-macros [defcard defcard-doc deftest]]
+    [viz.d3 :as d3]
+    ["react" :as react]))
 
 (defcard-doc
   "
   ## D3 charts standalone
   ")
+
+(defcard bar-chart
+         (let [data (mapv (fn [d]
+                            [(str "release-" d)
+                             (+ 3000 d)])
+                          (take 10 (repeatedly #(rand-int 2500))))
+               click-handler (fn [d]
+                               (pprint d))]
+           (html
+             [:div {}
+              [:style {} ".bar {fill: steelblue;} .bar:hover {fill: brown;cursor:pointer;}"]
+              (d3/container {:d3fn            (d3/bar-chart-horizontal! 500 200 data
+                                                                        {:on-click click-handler})
+                             ; below means the loading transition must complete in 1sec
+                             :animateDuration 1000})])))
 
 (defcard tree-map
          (let [data {:name     "flare"
