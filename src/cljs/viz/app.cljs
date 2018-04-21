@@ -1,6 +1,7 @@
 (ns viz.app
   (:require
-    ))
+    [cljs.pprint :refer [pprint]]
+    [sablono.core :include-macros true :refer [html]]))
 
 (defn ^:export init []
-  (js/console.log "start the engines"))
+  (pprint "start the engines"))
