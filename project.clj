@@ -1,9 +1,14 @@
-(defproject shadow-viz "0.1.0-SNAPSHOT"
+(defproject stu "0.1.0-SNAPSHOT"
   :description "Visualise builds of Clojurescript artifacts"
   :license {:name "Eclipse Public License"
             :url  "http://www.eclipse.org/legal/epl-v10.html"}
   :dependencies [[org.clojure/clojure "1.9.0"]
-                 [sablono "0.8.3"]]
+                 [sablono "0.8.3"]
+                 [reagent "0.8.0-alpha2" :exclusions [cljsjs/create-react-class
+                                                      cljsjs/react-dom-server
+                                                      cljsjs/react-dom
+                                                      cljsjs/react
+                                                      org.clojure/clojurescript]]]
 
   :clean-targets ^{:protect false} ["resources/public/app"
                                     "resources/public/devcards"

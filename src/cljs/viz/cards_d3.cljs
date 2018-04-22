@@ -12,10 +12,10 @@
   ")
 
 (defcard bar-chart
-         (let [data (mapv (fn [d]
-                            [(str "release-" d)
-                             (+ 3000 d)])
-                          (take 10 (repeatedly #(rand-int 2500))))
+         (let [data (map-indexed (fn [i d] {:id    i
+                                            :label (str "release-" d)
+                                            :value (+ 3000 d)})
+                                 (take 10 (repeatedly #(rand-int 2500))))
                click-handler (fn [d]
                                (pprint d))]
            (html

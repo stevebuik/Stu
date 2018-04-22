@@ -9,7 +9,8 @@
 ;;;; CHARTS ;;;;
 
 (defn bar-chart-horizontal!
-  "HOF returning a fn that mutates a dom div, adding a d3 bar chart"
+  "HOF returning a fn that mutates a dom div, adding a d3 bar chart.
+   The data arg is a seq of maps containing :label, :id and :value"
   [svg-width svg-height data {:keys [on-click]}]
   (fn [chart-div]
     (let [svg (.. d3 (select chart-div)
@@ -20,7 +21,7 @@
           width (- svg-width (:left margin) (:right margin))
           height (- svg-height (:top margin) (:bottom margin))
           x (.. d3 scaleLinear
-                (domain (clj->js [0 (reduce max (map second data))])) ; input
+                (domain (clj->js [0 (reduce max (map :value data))])) ; input
                 (range #js [0 width]))                      ; output
           y (.. d3 scaleLinear
                 (domain (clj->js [0 (count data)]))
@@ -28,7 +29,7 @@
           g (.. svg
                 (append "g")
                 (attr "transform" (str "translate(" (:left margin) "," (:top margin) ")")))
-          data-indexed (clj->js (map-indexed #(conj %2 %1) data))]
+          data-indexed (clj->js (map-indexed #(assoc %2 :position %1) data))]
 
       (let [bars (.. g
                      (selectAll ".bar")
@@ -38,7 +39,7 @@
                          (append "rect")
                          (attr "class" "bar")
                          (attr "x" 0)
-                         (attr "y" (fn [d] (y (last d))))   ; use index for y position
+                         (attr "y" (fn [d] (y (.-position d)))) ; use index for y position
                          (attr "width" 0)                   ; let animation change widths
                          (attr "height" (- (/ height (count data)) 1)))]
         (when on-click
@@ -67,7 +68,7 @@
                     (axisLeft y)
                     (tickSize 0)                            ; don't show tick lines
                     (tickPadding 5)                         ; space to left and right of tick labels
-                    (tickFormat (fn [i] (get-in data [i 0])))))
+                    (tickFormat (fn [i] (get-in data [i :label])))))
           (selectAll "text")
           ; below pushes label down to middle of bar
           (attr "dy" "1em"))
@@ -78,7 +79,7 @@
           (data data-indexed)
           (transition)
           (duration 500)
-          (attr "width" (fn [d i] (x (second d))))))
+          (attr "width" (fn [d i] (x (.-value d))))))
     ; return nothing : side-effecting
     nil))
 
