@@ -41,7 +41,7 @@
                          (attr "class" "bar")
                          (attr "x" 0)
                          (attr "y" (fn [d] (y (.-position d)))) ; use index for y position
-                         (attr "width" 0)                   ; let animation change widths
+                         (attr "width" (fn [d i] (x (.-value d))))
                          (attr "height" (- (/ height (count data)) 1)))]
         (when on-click
           (.. new-bars
@@ -75,15 +75,7 @@
                     (tickFormat (fn [i] (get-in data [i :label])))))
           (selectAll "text")
           ; below pushes label down to middle of bar
-          (attr "dy" "1.2em"))
-
-      ; transition from zero width (above) to actual width
-      (.. g
-          (selectAll ".bar")
-          (data data-indexed)
-          (transition)
-          (duration 500)
-          (attr "width" (fn [d i] (x (.-value d))))))
+          (attr "dy" "1.2em")))
     ; return nothing : side-effecting
     nil))
 
