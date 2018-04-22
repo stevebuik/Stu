@@ -1,5 +1,6 @@
 (ns stu.illuminate
   (:require
+    [clojure.pprint :refer [pprint]]
     [me.raynes.fs :as fs]
     [clojure.spec.alpha :as s]
     [viz.core :as viz]
@@ -17,12 +18,15 @@
 (s/fdef top-level
         :args (s/cat :node ::viz/node))
 
+; TODO multiple modules per bundle when code splitting in place
 (defn shadow-bundle->tree
   [bundle]
   (->> bundle
-       :build-sources
-       (mapv (fn [{:keys [resource-name js-size] :as source}]
-               {:name resource-name :size (int (/ js-size 1024))}))
+       :build-modules
+       first
+       :source-bytes
+       (mapv (fn [[resource-name size]]
+               {:name resource-name :size (int (/ size 1024))}))
        (sort-by :name)
        (group-by top-level)
        (mapv (fn top-level-node
@@ -44,7 +48,7 @@
 (defn shadow-bundle->snapshot
   [file-name]
   (let [parsed (edn/read-string (slurp file-name))]
-    {:id    (str (get-in parsed [:build-modules 0 :module-id]))
+    {:id    (parent-dir file-name)
      :label (parent-dir file-name)
      :when  (fs/mod-time file-name)
      :tree  (shadow-bundle->tree parsed)}))
@@ -55,7 +59,7 @@
 (defn shadow-bundle->summary
   [file-name]
   (let [parsed (edn/read-string (slurp file-name))]
-    {:id    (str (get-in parsed [:build-modules 0 :module-id]))
+    {:id    (parent-dir file-name)
      :label (parent-dir file-name)
      :when  (fs/mod-time file-name)
      :value (int (/ (get-in parsed [:build-modules 0 :js-size]) 1024))}))
@@ -88,24 +92,24 @@
 
 (defn generate-shadow-viz!
   [snapshots-dir file-name]
-  ; list each snapshot in the dir
-  ; map   - transform the bundle file into a ::viz/tree
-  ;       - wrap the tree in a ::viz/snapshot map
-  ; mapv   - transform each map into a transit string
-  ; jsonify the vector
-  ; append the json to the static host page and spit to the output file-name
-  )
-
-(def latest-bundle ".shadow-cljs/release-snapshots/app/latest/bundle-info.edn")
+  (let [releases (->> (fs/list-dir snapshots-dir)
+                      (sort-by fs/mod-time)
+                      reverse)
+        with-bundle-file #(str % "/bundle-info.edn")
+        id-from-path #(last (str/split (str %) #"/"))
+        summaries (->> releases
+                       (map with-bundle-file)
+                       (mapv shadow-bundle->summary))
+        snapshot-map (->> releases
+                          (map (fn [release-dir]
+                                 [(id-from-path release-dir)
+                                  (shadow-bundle->snapshot (with-bundle-file release-dir))]))
+                          (into {}))]
+    (spit-viz! summaries snapshot-map "resources/public/stu-builds.html")))
 
 (defn generate-sample!
   []
-  (let [snapshots [(shadow-bundle->snapshot latest-bundle)]
-        snapshot-map (->> snapshots
-                          (map (juxt :id identity))
-                          (into {}))
-        summaries [(shadow-bundle->summary latest-bundle)]]
-    (spit-viz! summaries snapshot-map "resources/public/stu-builds.html")))
+  (generate-shadow-viz! ".shadow-cljs/release-snapshots/app" "resources/public/stu-builds.html"))
 
 (defn shadow [& args]
   (generate-shadow-viz! (first args) (second args)))

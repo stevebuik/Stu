@@ -1,6 +1,5 @@
 (ns viz.cards-d3
   (:require
-    [cljs.pprint :refer [pprint]]
     [sablono.core :include-macros true :refer [html]]
     [devcards.core :as dc :include-macros true :refer-macros [defcard defcard-doc deftest]]
     [viz.d3 :as d3]
@@ -17,7 +16,7 @@
                                             :value (+ 3000 d)})
                                  (take 10 (repeatedly #(rand-int 2500))))
                click-handler (fn [d]
-                               (pprint d))]
+                               (js/console.log d))]
            (html
              [:div {}
               [:style {} ".bar {fill: steelblue;} .bar:hover {fill: brown;cursor:pointer;}"]

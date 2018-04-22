@@ -1,7 +1,7 @@
 (ns viz.d3
   (:require
-    [cljs.pprint :refer [pprint]]
     [goog.string :as gstring]
+    [goog.string.format]                                    ; required or release compile will generate invalid js
     ["react-faux-dom" :as faux-dom]
     ["d3" :as d3]
     ["react" :as react]

@@ -1,6 +1,5 @@
 (ns viz.app
   (:require
-    [cljs.pprint :refer [pprint]]
     [reagent.core :as r]
     [viz.core :as viz]
     [viz.d3 :as d3]
@@ -61,7 +60,5 @@
                        :snapshots (js->clj js/snapshots)}))
 
 (defn ^:export init []
-  (pprint "start the engines")
   (r/render [app-component (source-from-globals) "TODO title"]
-            (js/document.getElementById "app"))
-  (pprint "take off!"))
+            (js/document.getElementById "app")))
