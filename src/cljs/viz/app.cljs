@@ -17,12 +17,13 @@
         app-state (r/atom {:snapshot/id (:id (first snaps))})] ; default to showing the most recent snapshot
     (fn [source title]
       [:div {}
-       [:h3 {} title]
+       [:h3 {:style {:width  (str (count title) "rem")
+                     :margin "1rem auto"}} title]
        [:div {:style {:float       "left"
                       :marginRight "1rem"}}
         (let [click-handler (fn [e]
                               (swap! app-state assoc :snapshot/id (.-id e)))
-              chart (d3/bar-chart-horizontal! 200 300
+              chart (d3/bar-chart-horizontal! 200 (+ 50 (* 20 (count snaps)))
                                               snaps
                                               {:on-click click-handler})]
           [:div {}

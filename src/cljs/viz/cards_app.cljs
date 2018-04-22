@@ -14,7 +14,7 @@
 (def snap1 {:id        123
             :label     "gen1"
             :generated (js/Date.)
-            :size      25000
+            :size      800
             :data      {:name     "flare"
                         :children [{:name     "analytics"
                                     :children [{:name     "cluster"
@@ -28,13 +28,13 @@
 (def snap2 {:id        1234
             :label     "gen2"
             :generated (js/Date.)
-            :size      26000
+            :size      900
             :data      (update (:data snap1) :children conj {:name "new1" :size 10000})})
 
 (def snap3 {:id        12345
             :label     "gen3"
             :generated (js/Date.)
-            :size      28000
+            :size      1250
             :data      (update (:data snap2) :children conj {:name "new2" :size 2000})})
 
 (def db [snap3 snap2 snap1])

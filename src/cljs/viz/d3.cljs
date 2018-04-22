@@ -1,6 +1,7 @@
 (ns viz.d3
   (:require
     [cljs.pprint :refer [pprint]]
+    [goog.string :as gstring]
     ["react-faux-dom" :as faux-dom]
     ["d3" :as d3]
     ["react" :as react]
@@ -17,7 +18,7 @@
                   (append "svg")
                   (attr "width" svg-width)
                   (attr "height" svg-height))
-          margin {:top 20 :right 20 :bottom 50 :left 70}
+          margin {:top 0 :right 20 :bottom 50 :left 70}
           width (- svg-width (:left margin) (:right margin))
           height (- svg-height (:top margin) (:bottom margin))
           x (.. d3 scaleLinear
@@ -52,8 +53,10 @@
           (attr "transform" (str "translate(0," height ")"))
           (call (.. d3
                     (axisBottom x)
-                    (ticks 5)
-                    (tickFormat (fn [i] (str i "kb")))))
+                    (ticks 4)
+                    (tickFormat (fn [i] (if (< i 1024)
+                                          (gstring/format "%f k" i)
+                                          (gstring/format "%.1f m" (/ i 1024)))))))
           ; rotate labels
           (selectAll "text")
           (attr "x" 10)
@@ -66,12 +69,13 @@
           (append "g")
           (call (.. d3
                     (axisLeft y)
+                    (ticks (count data))
                     (tickSize 0)                            ; don't show tick lines
                     (tickPadding 5)                         ; space to left and right of tick labels
                     (tickFormat (fn [i] (get-in data [i :label])))))
           (selectAll "text")
           ; below pushes label down to middle of bar
-          (attr "dy" "1em"))
+          (attr "dy" "1.2em"))
 
       ; transition from zero width (above) to actual width
       (.. g
