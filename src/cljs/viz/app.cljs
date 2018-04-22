@@ -15,38 +15,49 @@
   [source title]
   (let [snaps (snapshots source)
         app-state (r/atom {:snapshot/id (:id (first snaps))})] ; default to showing the most recent snapshot
-    (fn [source title]
-      ; TODO calc chart sizes by measuring container size. maximise width!
-      (let [chart-sizes {:bar-width  200
-                         :tree-width 1200}]
-        (if-let [explain (s/explain-data ::viz/summaries snaps)]
-          [:div {}
-           "Invalid summary data!"
-           [:p {} explain]]
-          [:div {}
-           [:h3 {:style {:width  (str (count title) "rem")
-                         :margin "1rem auto"}} title]
-           (when (> (count snaps) 1)
-             [:div {:style {:float       "left"
-                            :marginRight "1rem"}}
-              (let [click-handler (fn [e]
-                                    (swap! app-state assoc :snapshot/id (.-id e)))
-                    chart (d3/bar-chart-horizontal! (:bar-width chart-sizes) (+ 50 (* 20 (count snaps)))
-                                                    (mapv (fn [snap] (update snap :when #(js/Date. %))) snaps)
-                                                    {:on-click click-handler})]
-                [:div {}
-                 [:style {} ".bar {fill: steelblue;} .bar:hover {fill: brown;cursor:pointer;}"]
-                 (d3/container {:d3fn            chart
-                                :animateDuration 1000})])])
-           [:div {:style {:float "left"}}
-            (let [snap (snapshot source (:snapshot/id @app-state))]
-              (if-let [explain (s/explain-data ::viz/snapshot snap)]
-                [:div {} "Invalid snapshot data"
-                 [:p {} explain]]
-                (d3/container {:d3fn (d3/tree-map! (:tree-width chart-sizes)
-                                                   (int (* (:tree-width chart-sizes) .6))
-                                                   (:tree snap) {})})))]
-           [:div {:style {:clear "both"}}]])))))
+    (r/create-class                                         ; form 3 component
+      {:component-did-mount
+       (fn [this]
+         (let [rect (.getBoundingClientRect (r/dom-node this))]
+           (js/setTimeout                                   ; hack to measure the container
+             #(swap! app-state merge {:container/width  (.-width rect)
+                                      :container/height (.-height rect)})
+             100)))
+       :reagent-render
+       (fn [source title]
+         (let [width (:container/width @app-state)
+               chart-sizes {:bar-width  200
+                            :tree-width (- width 250)}]
+           (if width
+             (if-let [explain (s/explain-data ::viz/summaries snaps)]
+               [:div {}
+                "Invalid summary data!"
+                [:p {} explain]]
+               [:div {}
+                [:h3 {:style {:width  (str (count title) "rem")
+                              :margin "1rem auto"}} title]
+                (when (> (count snaps) 1)
+                  [:div {:style {:float       "left"
+                                 :marginRight "1rem"}}
+                   (let [click-handler (fn [e]
+                                         (swap! app-state assoc :snapshot/id (.-id e)))
+                         chart (d3/bar-chart-horizontal! (:bar-width chart-sizes) (+ 50 (* 20 (count snaps)))
+                                                         (mapv (fn [snap] (update snap :when #(js/Date. %))) snaps)
+                                                         {:on-click click-handler})]
+                     [:div {}
+                      [:style {} ".bar {fill: steelblue;} .bar:hover {fill: brown;cursor:pointer;}"]
+                      (d3/container {:d3fn            chart
+                                     :animateDuration 1000})])])
+                [:div {:style {:float "left"}}
+                 (let [snap (snapshot source (:snapshot/id @app-state))]
+                   (if-let [explain (s/explain-data ::viz/snapshot snap)]
+                     [:div {} "Invalid snapshot data"
+                      [:p {} explain]]
+                     (d3/container {:d3fn (d3/tree-map! (:tree-width chart-sizes)
+                                                        (int (* (:tree-width chart-sizes) .6))
+                                                        (:tree snap) {})})))]
+                [:div {:style {:clear "both"}}]])
+             [:div {} "Loading.."])))})))
 
 (defrecord GlobalsSource [summaries snapshots]
   Source
