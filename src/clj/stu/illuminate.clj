@@ -27,6 +27,7 @@
        :source-bytes
        (mapv (fn [[resource-name size]]
                {:name resource-name :size (int (/ size 1024))}))
+       (remove #(zero? (:size %)))                          ; don't show items < 1k
        (sort-by :name)
        (group-by top-level)
        (mapv (fn top-level-node
