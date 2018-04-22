@@ -9,6 +9,14 @@
     [clojure.string :as str])
   (:import (java.io ByteArrayOutputStream)))
 
+(defn top-level
+  [node]
+  (-> (:name node)
+      (str/split #"/")
+      first))
+(s/fdef top-level
+        :args (s/cat :node ::viz/node))
+
 (defn shadow-bundle->tree
   [bundle]
   (->> bundle
@@ -16,7 +24,11 @@
        (mapv (fn [{:keys [resource-name js-size] :as source}]
                {:name resource-name :size (int (/ js-size 1024))}))
        (sort-by :name)
-       vec
+       (group-by top-level)
+       (mapv (fn top-level-node
+               [[k v]]
+               {:name     k
+                :children v}))
        (hash-map :name "app" :children)))
 (s/fdef shadow-bundle->tree
         :args (s/cat :bundle map?)

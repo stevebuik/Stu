@@ -30,4 +30,3 @@
       "latest bundle for this app generates a valid summary"))
 
 
-
