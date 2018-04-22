@@ -9,7 +9,11 @@
                                                       cljsjs/react-dom-server
                                                       cljsjs/react-dom
                                                       cljsjs/react
-                                                      org.clojure/clojurescript]]]
+                                                      org.clojure/clojurescript]]
+                 [org.clojure/data.json "0.2.6"]
+                 [com.cognitect/transit-clj "0.8.303"]
+                 [com.cognitect/transit-cljs "0.8.256"]
+                 [me.raynes/fs "1.4.6"]]
 
   :clean-targets ^{:protect false} ["resources/public/app"
                                     "resources/public/devcards"

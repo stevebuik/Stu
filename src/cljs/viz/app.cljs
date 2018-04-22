@@ -4,7 +4,8 @@
     [reagent.core :as r]
     [viz.core :as viz]
     [viz.d3 :as d3]
-    [clojure.spec.alpha :as s]))
+    [clojure.spec.alpha :as s]
+    [cognitect.transit :as transit]))
 
 (defprotocol Source
   (snapshots [this])                                        ; a sorted (:generated desc) seq of snapshot-summary
@@ -18,7 +19,7 @@
     (fn [source title]
       ; TODO calc chart sizes by measuring container size. maximise width!
       (let [chart-sizes {:bar-width  200
-                         :tree-width 600}]
+                         :tree-width 1200}]
         (if-let [explain (s/explain-data ::viz/summaries snaps)]
           [:div {}
            "Invalid summary data!"
@@ -43,8 +44,24 @@
               (if-let [explain (s/explain-data ::viz/snapshot snap)]
                 [:div {} "Invalid snapshot data"
                  [:p {} explain]]
-                (d3/container {:d3fn (d3/tree-map! (:tree-width chart-sizes) 350 (:tree snap) {})})))]
+                (d3/container {:d3fn (d3/tree-map! (:tree-width chart-sizes)
+                                                   (int (* (:tree-width chart-sizes) .6))
+                                                   (:tree snap) {})})))]
            [:div {:style {:clear "both"}}]])))))
 
+(defrecord GlobalsSource [summaries snapshots]
+  Source
+  (snapshots [this] summaries)
+  (snapshot [this id] (let [reader (transit/reader :json)]
+                        (transit/read reader (get snapshots id)))))
+
+(defn source-from-globals
+  []
+  (map->GlobalsSource {:summaries (js->clj js/summaries :keywordize-keys true)
+                       :snapshots (js->clj js/snapshots)}))
+
 (defn ^:export init []
-  (pprint "start the engines"))
+  (pprint "start the engines")
+  (r/render [app-component (source-from-globals) "TODO title"]
+            (js/document.getElementById "app"))
+  (pprint "take off!"))
