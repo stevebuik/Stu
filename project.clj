@@ -3,6 +3,7 @@
   :license {:name "Eclipse Public License"
             :url  "http://www.eclipse.org/legal/epl-v10.html"}
   :dependencies [[org.clojure/clojure "1.9.0"]
+                 [org.clojure/spec.alpha "0.1.143"]
                  [sablono "0.8.3"]
                  [reagent "0.8.0-alpha2" :exclusions [cljsjs/create-react-class
                                                       cljsjs/react-dom-server
@@ -14,7 +15,7 @@
                                     "resources/public/devcards"
                                     "target"]
 
-  :source-paths ["src/clj" "src/cljs"]
+  :source-paths ["src/clj" "src/cljs" "src/cljc"]
 
   :profiles {:dev {:source-paths ["dev"]
                    :dependencies [[binaryage/devtools "0.9.8"]
