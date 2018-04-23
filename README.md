@@ -12,7 +12,11 @@ Initially supports Shadow CLJS but can support any compilation source.
 
 ## Usage
 
-* TODO single vs N
+`lein run -m stu.illuminate` invokes the command line with default args.
+
+`lein run -m stu.illuminate -h` provides docs and default values for args.
+
+Any other way of invoking *stu.illuminate/-main* is valid e.g. the Shadow CLJS *clj-run* feature.
 
 ## Design
 
