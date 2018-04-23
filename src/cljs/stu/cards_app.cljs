@@ -1,14 +1,14 @@
-(ns viz.cards-app
+(ns stu.cards-app
   (:require
     [devcards.core :as dc :include-macros true :refer-macros [defcard defcard-doc deftest]]
     [reagent.core :as r]
-    [viz.app :as app]
+    [stu.app :as app]
     [clojure.set :as set]
-    [viz.sample-data :as sample]))
+    [stu.sample-data :as sample]))
 
 (defcard-doc
   "
-  ## release viz app in various states
+  ## release stu app in various states
 
   Only the top two states (multiple and single) should be seen in normal use.
   The empty state means that the page generation failed to find any source data to transform.

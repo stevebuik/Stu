@@ -1,4 +1,4 @@
-(ns viz.sample-data)
+(ns stu.sample-data)
 
 ; data captured from generation from this apps bundles
 
@@ -83,11 +83,11 @@
                     :children
                           [{:name "cljs/core.cljs", :size 133}
                            {:name "cljs/spec/alpha.cljs", :size 28}]}
-                   {:name "viz",
+                   {:name "stu",
                     :children
-                          [{:name "viz/app.cljs", :size 4}
-                           {:name "viz/core.cljc", :size 3}
-                           {:name "viz/d3.cljs", :size 3}]}
+                          [{:name "stu/app.cljs", :size 4}
+                           {:name "stu/core.cljc", :size 3}
+                           {:name "stu/d3.cljs", :size 3}]}
                    {:name "shadow", :children [{:name "shadow/js.js", :size 1}]}
                    {:name "goog",
                     :children
@@ -178,11 +178,11 @@
                     :children
                           [{:name "cljs/core.cljs", :size 133}
                            {:name "cljs/spec/alpha.cljs", :size 28}]}
-                   {:name "viz",
+                   {:name "stu",
                     :children
-                          [{:name "viz/app.cljs", :size 4}
-                           {:name "viz/core.cljc", :size 3}
-                           {:name "viz/d3.cljs", :size 3}]}
+                          [{:name "stu/app.cljs", :size 4}
+                           {:name "stu/core.cljc", :size 3}
+                           {:name "stu/d3.cljs", :size 3}]}
                    {:name "shadow", :children [{:name "shadow/js.js", :size 1}]}
                    {:name "goog",
                     :children
@@ -283,7 +283,7 @@
                     :children
                           [{:name "shadow/cljs/constants/main.js", :size 1}
                            {:name "shadow/js.js", :size 1}]}
-                   {:name "viz", :children [{:name "viz/core.cljc", :size 3}]}],
+                   {:name "stu", :children [{:name "stu/core.cljc", :size 3}]}],
             :name "app"}},
    "0.4"
    {:id    "0.4",

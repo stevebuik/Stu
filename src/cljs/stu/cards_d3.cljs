@@ -1,8 +1,8 @@
-(ns viz.cards-d3
+(ns stu.cards-d3
   (:require
     [sablono.core :include-macros true :refer [html]]
     [devcards.core :as dc :include-macros true :refer-macros [defcard defcard-doc deftest]]
-    [viz.d3 :as d3]
+    [stu.d3 :as d3]
     ["react" :as react]))
 
 (defcard-doc

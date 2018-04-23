@@ -4,7 +4,7 @@
     [clojure.test :refer :all]
     [clojure.spec.alpha :as s]
     [clojure.spec.test.alpha :as st]
-    [viz.core :as viz]
+    [stu.core :as stu]
     [stu.illuminate :as illuminate]))
 
 (s/check-asserts true)
@@ -18,14 +18,14 @@
 (deftest latest-generates-valid-snapshot
   (is (->>
         (illuminate/shadow-bundle->snapshot latest-bundle)
-        (s/explain-data ::viz/snapshot)
+        (s/explain-data ::stu/snapshot)
         nil?)
       "latest bundle for this app generates a valid snapshot"))
 
 (deftest latest-generates-valid-summary
   (is (->>
         (illuminate/shadow-bundle->summary latest-bundle)
-        (s/explain-data ::viz/summary)
+        (s/explain-data ::stu/summary)
         nil?)
       "latest bundle for this app generates a valid summary"))
 

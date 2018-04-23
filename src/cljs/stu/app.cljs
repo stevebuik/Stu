@@ -1,10 +1,10 @@
-(ns viz.app
+(ns stu.app
   (:require
     [goog.string :as gstring]
     [goog.string.format]                                    ; required or release compile will generate invalid js
     [reagent.core :as r]
-    [viz.core :as viz]
-    [viz.d3 :as d3]
+    [stu.core :as viz]
+    [stu.d3 :as d3]
     [clojure.spec.alpha :as s]
     [cognitect.transit :as transit]))
 

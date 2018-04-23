@@ -1,4 +1,4 @@
-(ns viz.d3
+(ns stu.d3
   (:require
     [goog.string :as gstring]
     [goog.string.format]                                    ; required or release compile will generate invalid js

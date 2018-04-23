@@ -1,8 +1,8 @@
-(ns viz.devcards
+(ns stu.devcards
   (:require
     [devcards.core :as dc :include-macros true]
-    [viz.cards-d3]
-    [viz.cards-app]))
+    [stu.cards-d3]
+    [stu.cards-app]))
 
 (defn ^:export init []
   (dc/start-devcard-ui!))

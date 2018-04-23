@@ -1,4 +1,4 @@
-(ns viz.core
+(ns stu.core
   (:require
     #?(:clj
         [clojure.spec.alpha :as s]
@@ -15,10 +15,11 @@
 
 (s/def ::name string?)
 (s/def ::size int?)
-(s/def ::children (s/coll-of ::node :kind vector?))
+(s/def ::children (s/coll-of ::node :kind vector?))         ; recursive spec
 
 (s/def ::node (s/keys :req-un [::name]
                       :opt-un [::size ::children]))
+
 (s/def ::tree ::node)
 (s/def ::snapshot (s/keys :req-un [::id ::label ::when ::tree]))
 

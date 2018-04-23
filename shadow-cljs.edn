@@ -2,7 +2,7 @@
  :builds {:devcards {:target     :browser
                      :output-dir "resources/public/devcards" ; where does compilation output go
                      :asset-path "/devcards"                ; sets path to comiled assets in loader script
-                     :modules    {:main {:entries [viz.devcards]}}
+                     :modules    {:main {:entries [stu.devcards]}}
                      ; :devcards true is supposed to add preloads and calls start-devcard-ui! but not so for now
                      :dev        {:compiler-options {:devcards true}}
                      :devtools   {:http-root "resources/public"
@@ -13,7 +13,7 @@
           :app      {:target     :browser
                      :output-dir "resources/public/app"     ; where does compilation output go
                      :asset-path "/app"                     ; sets path to comiled assets in loader script
-                     :modules    {:main {:entries [viz.app]}}
+                     :modules    {:main {:entries [stu.app]}}
                      :devtools   {:http-root "resources/public"
                                   :http-port 8290}}}}
 
