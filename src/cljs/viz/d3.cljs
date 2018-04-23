@@ -5,7 +5,8 @@
     ["react-faux-dom" :as faux-dom]
     ["d3" :as d3]
     ["react" :as react]
-    ["create-react-class" :as create-class]))
+    ["create-react-class" :as create-class]
+    [clojure.string :as str]))
 
 ;;;; CHARTS ;;;;
 
@@ -81,19 +82,25 @@
 
 (defn tree-map!
   "HOF returning a fn that mutates a dom div, adding a d3 tree-map"
-  [svg-width svg-height data {:keys [transition-duration]}]
+  [svg-width svg-height data {:keys [transition-duration legend-height legend-padding]
+                              :or   {legend-height  20
+                                     legend-padding 10}}]
   (fn [chart-div]
     ; ported from https://bl.ocks.org/mbostock/4063582
-    (let [svg (.. d3 (select chart-div)
+    (let [legend-width 75
+          legend-offset (+ legend-height legend-padding)
+          svg (.. d3 (select chart-div)
                   (append "svg")
                   (attr "width" svg-width)
                   (attr "height" svg-height))
           margin {:top 20 :right 20 :bottom 20 :left 70}
           width (- svg-width (:left margin) (:right margin))
-          height (- svg-height (:top margin) (:bottom margin))
-          color (.. d3 (scaleOrdinal d3/schemeCategory10))  ; https://github.com/d3/d3-scale-chromatic
+          height (- svg-height (:top margin) (:bottom margin) legend-offset)
+          color (.. d3
+                    (scaleOrdinal d3/schemeSet3)            ; https://github.com/d3/d3-scale-chromatic
+                    (domain (clj->js (map :name (:children data))))) ; set the colors so they can be used in the legend as well
           treemap (.. d3 treemap
-                      (tile d3/treemapResquarify)
+                      (tile d3/treemapSquarify)
                       (size (clj->js [width height]))
                       (paddingInner 1))
           root (.. d3
@@ -114,20 +121,54 @@
             cell (.. joined
                      (enter)
                      (append "g")
-                     (attr "transform" (fn [d] (str "translate(" (.-x0 d) "," (.-y0 d) ")"))))]
+                     (attr "transform" (fn [d] (str "translate(" (.-x0 d) "," (+ (.-y0 d) legend-offset) ")"))))]
 
         (.. cell
             (append "rect")
             (attr "id" (fn [d] (.. d -data -id)))
             (attr "width" (fn [d] (- (.-x1 d) (.-x0 d))))
             (attr "height" (fn [d] (- (.-y1 d) (.-y0 d))))
-            (attr "fill" (fn [d] (color (.. d -parent -data -id)))))
+            (attr "fill" (fn [d]                            ; parent is foo.bar but we set color domain using "bar" above
+                           (-> (.. d -parent -data -id)
+                               (str/split #"\.") (last)
+                               color))))
 
         (.. cell
+            (filter (fn [d]
+                      (let [width (- (.-x1 d) (.-x0 d))
+                            height (- (.-y1 d) (.-y0 d))]
+                        (and (> width 50) (> height 25)))))
             (append "text")
             (attr "x" 5)
             (attr "y" 15)
-            (text (fn [d] (.. d -data -name))))))
+            (text (fn [d] (last (str/split (.. d -data -name) #"/"))))))
+
+      (let [legend (.. svg
+                       (append "g")
+                       (selectAll "g")
+                       (data (.. color domain)))
+            legend-entries (.. legend
+                               (enter)
+                               (append "g")
+                               (attr "class" "legend")
+                               (attr "transform" (fn [d i]
+                                                   (str "translate(" (* i legend-width) ", 0)"))))
+
+            legend-rects (.. legend-entries
+                             (append "rect")
+                             (attr "width" (str legend-width "px"))
+                             (attr "height" (str legend-height "px"))
+                             (attr "fill" color))
+
+            legend-texts (.. legend-entries
+                             (append "text")
+                             (attr "x" 5)
+                             (attr "y" 15)
+                             (text identity))
+
+            ])
+
+      )
     ; return nothing. side-effecting fn
     nil))
 

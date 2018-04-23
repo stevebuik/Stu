@@ -25,9 +25,14 @@
              100)))
        :reagent-render
        (fn [source title]
-         (let [width (:container/width @app-state)
+         (let [legend-padding 10
+               legend-height 20
+               width (:container/width @app-state)
+               bar-chart-visible? (> (count snaps) 1)
                chart-sizes {:bar-width  200
-                            :tree-width (- width 250)}]
+                            :tree-width (if bar-chart-visible?
+                                          (- width 250)
+                                          width)}]
            (if width
              (if-let [explain (s/explain-data ::viz/summaries snaps)]
                [:div {}
@@ -36,9 +41,10 @@
                [:div {}
                 [:h3 {:style {:width  (str (count title) "rem")
                               :margin "1rem auto"}} title]
-                (when (> (count snaps) 1)
+                (when bar-chart-visible?
                   [:div {:style {:float       "left"
-                                 :marginRight "1rem"}}
+                                 :marginRight "1rem"
+                                 :marginTop   (str (+ legend-height legend-padding) "px")}}
                    (let [click-handler (fn [e]
                                          (swap! app-state assoc :snapshot/id (.-id e)))
                          chart (d3/bar-chart-horizontal! (:bar-width chart-sizes) (+ 50 (* 20 (count snaps)))
@@ -55,7 +61,9 @@
                       [:p {} explain]]
                      (d3/container {:d3fn (d3/tree-map! (:tree-width chart-sizes)
                                                         (int (* (:tree-width chart-sizes) .6))
-                                                        (:tree snap) {})})))]
+                                                        (:tree snap)
+                                                        {:legend-padding legend-padding
+                                                         :legend-height  legend-height})})))]
                 [:div {:style {:clear "both"}}]])
              [:div {} "Loading.."])))})))
 
