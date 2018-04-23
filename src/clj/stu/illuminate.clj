@@ -69,7 +69,7 @@
         :ret ::viz/summary)
 
 (defn spit-viz!
-  [summaries snapshots file-name]
+  [title summaries snapshots file-name]
   (let [template-contents (slurp "resources/viz-host-page.html")
         ; app script in this case is app + a new source
         app-script-contents (slurp "resources/viz-app-release.js")
@@ -83,6 +83,7 @@
                                   (into {}))
         full-contents (-> template-contents
                           (str/replace "***app***" app-script-contents)
+                          (str/replace "***title***" title)
                           (str/replace "***summaries***" (json/write-str summaries))
                           (str/replace "***snapshots***" (json/write-str snapshots-as-transit)))]
     (spit file-name full-contents)))
@@ -92,7 +93,7 @@
                      :file-name string?))
 
 (defn generate-shadow-viz!
-  [snapshots-dir file-name]
+  [snapshots-dir file-name {:keys [title]}]
   (let [releases (->> (fs/list-dir snapshots-dir)
                       (sort-by fs/mod-time)
                       reverse)
@@ -106,11 +107,11 @@
                                  [(id-from-path release-dir)
                                   (shadow-bundle->snapshot (with-bundle-file release-dir))]))
                           (into {}))]
-    (spit-viz! summaries snapshot-map "resources/public/stu-builds.html")))
+    (spit-viz! title summaries snapshot-map "resources/public/stu-builds.html")))
 
 (defn generate-sample!
   []
-  (generate-shadow-viz! ".shadow-cljs/release-snapshots/app" "resources/public/stu-builds.html"))
+  (generate-shadow-viz! ".shadow-cljs/release-snapshots/app" "resources/public/stu-builds.html" {:title "Stu App Sizes"}))
 
 (defn shadow [& args]
-  (generate-shadow-viz! (first args) (second args)))
+  (generate-shadow-viz! (first args) (second args) (apply hash-map (drop 2 args))))

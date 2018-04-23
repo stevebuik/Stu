@@ -17,6 +17,7 @@
 
 (defcard multiple-snapshots
          (r/as-element [app/app-component (reify app/Source
+                                            (title [_] "many snapshots")
                                             (snapshots [_] sample/summaries)
                                             (snapshot [_ id]
                                               (get sample/snapshots id)))
@@ -24,6 +25,7 @@
 
 (defcard single-snapshot
          (r/as-element [app/app-component (reify app/Source
+                                            (title [_] "one snapshot")
                                             (snapshots [_] (take 1 sample/summaries))
                                             (snapshot [_ id]
                                               (get sample/snapshots id)))
@@ -31,18 +33,21 @@
 
 #_#_#_(defcard empty-state
                (app/app-component (reify app/Source
+                                    (title [_] "empty")
                                     (snapshots [_] [])
                                     (snapshot [_ id] {}))
                                   "Fake CLJS App"))
 
     (defcard invalid-summary-data
              (app/app-component (reify app/Source
+                                  (title [_] "invalid")
                                   (snapshots [_] [])
                                   (snapshot [_ id] {}))
                                 "Fake CLJS App"))
 
     (defcard invalid-snapshot-data
              (app/app-component (reify app/Source
+                                  (title [_] "invalid")
                                   (snapshots [_] [])
                                   (snapshot [_ id] {}))
                                 "Fake CLJS App"))

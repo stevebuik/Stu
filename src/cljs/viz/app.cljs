@@ -7,12 +7,13 @@
     [cognitect.transit :as transit]))
 
 (defprotocol Source
+  (title [this])
   (snapshots [this])                                        ; a sorted (:generated desc) seq of snapshot-summary
   (snapshot [this id]))                                     ; a snapshot
 
 (defn app-component
   "return a react component which shows the timeline and size chart"
-  [source title]
+  [source]
   (let [snaps (snapshots source)
         app-state (r/atom {:snapshot/id (:id (first snaps))})] ; default to showing the most recent snapshot
     (r/create-class                                         ; form 3 component
@@ -24,8 +25,9 @@
                                       :container/height (.-height rect)})
              100)))
        :reagent-render
-       (fn [source title]
-         (let [legend-padding 10
+       (fn [source]
+         (let [title (title source)
+               legend-padding 10
                legend-height 20
                width (:container/width @app-state)
                bar-chart-visible? (> (count snaps) 1)
@@ -67,17 +69,19 @@
                 [:div {:style {:clear "both"}}]])
              [:div {} "Loading.."])))})))
 
-(defrecord GlobalsSource [summaries snapshots]
+(defrecord GlobalsSource [title summaries snapshots]
   Source
+  (title [this] title)
   (snapshots [this] summaries)
   (snapshot [this id] (let [reader (transit/reader :json)]
                         (transit/read reader (get snapshots id)))))
 
 (defn source-from-globals
   []
-  (map->GlobalsSource {:summaries (js->clj js/summaries :keywordize-keys true)
+  (map->GlobalsSource {:title     js/title
+                       :summaries (js->clj js/summaries :keywordize-keys true)
                        :snapshots (js->clj js/snapshots)}))
 
 (defn ^:export init []
-  (r/render [app-component (source-from-globals) "TODO title"]
+  (r/render [app-component (source-from-globals)]
             (js/document.getElementById "app")))
