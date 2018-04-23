@@ -28,7 +28,6 @@ Initially supports Shadow CLJS but can support any compilation source.
 * zoom transitions
 * toggle between source and js size (shows closure value)
 * bar tooltips
-* tree box tooltips
 * generate and commit viz for this app in CI
 * s3 persistence of bundles
 * script to generate bundles from git log
