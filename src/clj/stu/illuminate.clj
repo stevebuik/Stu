@@ -28,8 +28,7 @@
        first
        :source-bytes
        (mapv (fn [[resource-name size]]
-               {:name resource-name :size (int (/ size 1024))}))
-       (remove #(zero? (:size %)))                          ; don't show items < 1k
+               {:name resource-name :size size}))
        (sort-by :name)
        (group-by top-level)
        (mapv (fn top-level-node
@@ -65,7 +64,7 @@
     {:id    (parent-dir file-name)
      :label (parent-dir file-name)
      :when  (fs/mod-time file-name)
-     :value (int (/ (get-in parsed [:build-modules 0 :js-size]) 1024))}))
+     :value (get-in parsed [:build-modules 0 :js-size])}))
 (s/fdef shadow-bundle->summary
         :args (s/cat :file-name string?)
         :ret ::stu/summary)

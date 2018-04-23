@@ -34,6 +34,7 @@ Any other way of invoking *stu.illuminate/-main* is valid e.g. the Shadow CLJS *
 * multi-module viz
 * zoom transitions
 * toggle between source and js size (shows closure value)
+* legend tooltips (size and %)
 * bar tooltips
 * generate and commit viz for this app in CI
 * s3 persistence of bundles

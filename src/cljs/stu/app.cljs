@@ -60,9 +60,9 @@
                 [:div {:style {:float "left"}}
                  (let [snap (snapshot source (:snapshot/id @app-state))
                        tooltip (fn [d]
-                                 (gstring/format "<p>%s</p><p>Compiled: %sk</p>"
+                                 (gstring/format "<p>%s</p><p>Compiled: %s</p>"
                                                  (.. d -data -name)
-                                                 (.. d -data -size)))]
+                                                 (d3/size-string (.. d -data -size))))]
                    (if-let [explain (s/explain-data ::viz/snapshot snap)]
                      [:div {} "Invalid snapshot data"
                       [:p {} explain]]

@@ -8,6 +8,13 @@
     ["create-react-class" :as create-class]
     [clojure.string :as str]))
 
+(defn size-string
+  [i]
+  (cond
+    (< i 1024) (gstring/format "%f b" i)
+    (< i (* 1024 1024)) (gstring/format "%.0f k" (/ i 1024))
+    :else (gstring/format "%.1f m" (/ i (* 1024 1024)))))
+
 ;;;; CHARTS ;;;;
 
 (defn bar-chart-horizontal!
@@ -54,10 +61,8 @@
           (attr "transform" (str "translate(0," height ")"))
           (call (.. d3
                     (axisBottom x)
-                    (ticks 4)
-                    (tickFormat (fn [i] (if (< i 1024)
-                                          (gstring/format "%f k" i)
-                                          (gstring/format "%.1f m" (/ i 1024)))))))
+                    (ticks 5)
+                    (tickFormat size-string)))
           ; rotate labels
           (selectAll "text")
           (attr "x" 10)
@@ -181,11 +186,8 @@
                              (append "text")
                              (attr "x" 5)
                              (attr "y" 15)
-                             (text identity))
+                             (text identity))]))
 
-            ])
-
-      )
     ; return nothing. side-effecting fn
     nil))
 
