@@ -1,5 +1,7 @@
 (ns viz.app
   (:require
+    [goog.string :as gstring]
+    [goog.string.format]                                    ; required or release compile will generate invalid js
     [reagent.core :as r]
     [viz.core :as viz]
     [viz.d3 :as d3]
@@ -56,15 +58,20 @@
                       (d3/container {:d3fn            chart
                                      :animateDuration 1000})])])
                 [:div {:style {:float "left"}}
-                 (let [snap (snapshot source (:snapshot/id @app-state))]
+                 (let [snap (snapshot source (:snapshot/id @app-state))
+                       tooltip (fn [d]
+                                 (gstring/format "<p>%s</p><p>Compiled: %sk</p>"
+                                                 (.. d -data -name)
+                                                 (.. d -data -size)))]
                    (if-let [explain (s/explain-data ::viz/snapshot snap)]
                      [:div {} "Invalid snapshot data"
                       [:p {} explain]]
                      (d3/container {:d3fn (d3/tree-map! (:tree-width chart-sizes)
                                                         (int (* (:tree-width chart-sizes) .6))
                                                         (:tree snap)
-                                                        {:legend-padding legend-padding
-                                                         :legend-height  legend-height})})))]
+                                                        {:legend-padding  legend-padding
+                                                         :legend-height   legend-height
+                                                         :tooltip-content tooltip})})))]
                 [:div {:style {:clear "both"}}]])
              [:div {} "Loading.."])))})))
 

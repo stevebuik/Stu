@@ -82,9 +82,12 @@
 
 (defn tree-map!
   "HOF returning a fn that mutates a dom div, adding a d3 tree-map"
-  [svg-width svg-height data {:keys [transition-duration legend-height legend-padding]
+  [svg-width svg-height data {:keys [transition-duration legend-height legend-padding tooltip-content]
                               :or   {legend-height  20
-                                     legend-padding 10}}]
+                                     legend-padding 10
+                                     tooltip-content
+                                                    (fn [d]
+                                                      "<p>TODO Add content</p>")}}]
   (fn [chart-div]
     ; ported from https://bl.ocks.org/mbostock/4063582
     (let [legend-width 75
@@ -121,7 +124,12 @@
             cell (.. joined
                      (enter)
                      (append "g")
-                     (attr "transform" (fn [d] (str "translate(" (.-x0 d) "," (+ (.-y0 d) legend-offset) ")"))))]
+                     (attr "transform" (fn [d] (str "translate(" (.-x0 d) "," (+ (.-y0 d) legend-offset) ")"))))
+            ; TODO tooltip div is duplicated after each re-render. how to fix this?
+            tool (.. d3
+                     (select "body")
+                     (append "div")
+                     (attr "class" "toolTip"))]
 
         (.. cell
             (append "rect")
@@ -131,7 +139,16 @@
             (attr "fill" (fn [d]                            ; parent is foo.bar but we set color domain using "bar" above
                            (-> (.. d -parent -data -id)
                                (str/split #"\.") (last)
-                               color))))
+                               color)))
+            (on "mousemove" (fn [d]
+                              (.. tool
+                                  (style "top" (str (.. d3 -event -pageY) "px"))
+                                  (style "left" (str (.. d3 -event -pageX) "px"))
+                                  (style "display" "inline-block")
+                                  (html (tooltip-content d)))))
+            (on "mouseout" (fn [d]
+                             (.. tool
+                                 (style "display" "none")))))
 
         (.. cell
             (filter (fn [d]
