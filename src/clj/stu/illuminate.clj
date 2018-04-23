@@ -73,6 +73,7 @@
   (let [template-contents (slurp "resources/viz-host-page.html")
         ; app script in this case is app + a new source
         app-script-contents (slurp "resources/viz-app-release.js")
+        css-contents (slurp "resources/public/app.css")
         snapshots-as-transit (->> snapshots
                                   (map (fn [[k v]]
                                          ; encode each snapshot as a transit string to minimise chars
@@ -83,6 +84,7 @@
                                   (into {}))
         full-contents (-> template-contents
                           (str/replace "***app***" app-script-contents)
+                          (str/replace "***css***" css-contents)
                           (str/replace "***title***" title)
                           (str/replace "***summaries***" (json/write-str summaries))
                           (str/replace "***snapshots***" (json/write-str snapshots-as-transit)))]

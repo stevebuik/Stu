@@ -53,7 +53,6 @@
                                                          (mapv (fn [snap] (update snap :when #(js/Date. %))) snaps)
                                                          {:on-click click-handler})]
                      [:div {}
-                      [:style {} ".bar {fill: steelblue;} .bar:hover {fill: brown;cursor:pointer;}"]
                       (d3/container {:d3fn            chart
                                      :animateDuration 1000})])])
                 [:div {:style {:float "left"}}
