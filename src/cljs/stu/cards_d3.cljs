@@ -1,6 +1,6 @@
 (ns stu.cards-d3
   (:require
-    [sablono.core :include-macros true :refer [html]]
+    [reagent.core :as r]
     [devcards.core :as dc :include-macros true :refer-macros [defcard defcard-doc deftest]]
     [stu.d3 :as d3]
     ["react" :as react]))
@@ -17,9 +17,8 @@
                                  (take 10 (repeatedly #(rand-int 2500))))
                click-handler (fn [d]
                                (js/console.log d))]
-           (html
+           (r/as-element
              [:div {}
-              [:style {} ".bar {fill: steelblue;} .bar:hover {fill: brown;cursor:pointer;}"]
               (d3/container {:d3fn            (d3/bar-chart-horizontal! 500 200 data
                                                                         {:on-click click-handler})
                              ; below means the loading transition must complete in 1sec

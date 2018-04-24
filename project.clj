@@ -4,7 +4,6 @@
             :url  "http://www.eclipse.org/legal/epl-v10.html"}
   :dependencies [[org.clojure/clojure "1.9.0"]
                  [org.clojure/spec.alpha "0.1.143"]
-                 [sablono "0.8.3"]
                  [reagent "0.8.0-alpha2" :exclusions [cljsjs/create-react-class
                                                       cljsjs/react-dom-server
                                                       cljsjs/react-dom
