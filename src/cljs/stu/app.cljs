@@ -15,7 +15,8 @@
 
 (defn app-component
   "return a react component which shows the timeline and size chart"
-  [source]
+  [source {:keys [fixed-bars?]
+           :or   {fixed-bars? true}}]
   (let [snaps (snapshots source)
         app-state (r/atom {:snapshot/id (:id (first snaps))})] ; default to showing the most recent snapshot
     (r/create-class                                         ; form 3 component
@@ -45,51 +46,59 @@
                [:div {}
                 [:h3 {:style {:width  (str (count title) "rem")
                               :margin "1rem auto"}} title]
-                (when bar-chart-visible?
-                  [:div {:style {:float       "left"
-                                 :marginRight "1rem"
-                                 :marginTop   (str (+ legend-height legend-padding) "px")}}
-                   (let [click-handler (fn [e]
-                                         (swap! app-state assoc :snapshot/id (.-id e)))
-                         snaps-for-bar-chart (->> snaps
-                                                  (mapv (fn convert-date [snap]
-                                                          (update snap :when #(js/Date. %))))
-                                                  (mapv (fn sum-module-sizes [snap]
-                                                          (-> snap
-                                                              (merge {:size            (->> (:modules snap)
-                                                                                            (map :size)
-                                                                                            (reduce +))
-                                                                      :size-compressed (->> (:modules snap)
-                                                                                            (map :size-compressed)
-                                                                                            (reduce +))})
-                                                              (dissoc :modules)))))
-                         chart (d3/bar-chart-horizontal! (:bar-width chart-sizes) (+ 50 (* 20 (count snaps)))
-                                                         snaps-for-bar-chart
-                                                         {:on-click  click-handler
-                                                          :value-key :size})]
-                     [:div {}
-                      (d3/container {:d3fn            chart
-                                     :animateDuration 1000})])])
-                [:div {:style {:float "left"}}
-                 (let [snap (snapshot source (:snapshot/id @app-state))
-                       tooltip (fn [d]
-                                 (gstring/format "<p>%s</p><p>Compiled: %s</p>"
-                                                 (.. d -data -name)
-                                                 (d3/size-string (.. d -data -size))))]
-                   (if-let [explain (s/explain-data ::viz/snapshot snap)]
-                     [:div {} "Invalid snapshot data"
-                      [:p {} explain]]
-                     (for [module snap]
-                       [:div {:key (:id module)}
-                        [:h3 {} (gstring/format "Module: %s ( %s )"
-                                                (:label module)
-                                                (d3/size-string (:size module)))]
-                        (d3/container {:d3fn (d3/tree-map! (:tree-width chart-sizes)
-                                                           (int (* (:tree-width chart-sizes) .6))
-                                                           (:tree module)
-                                                           {:legend-padding  legend-padding
-                                                            :legend-height   legend-height
-                                                            :tooltip-content tooltip})})])))]
+                [:div {}
+
+                 (when bar-chart-visible?
+                   [:div {:style {:float "left"
+                                  :width "210px"}}
+                    [:br {}]                                ; need content to keep the float left while fixed
+                    [:div {:style (if fixed-bars? {:position "fixed"
+                                                   :top      "80px"
+                                                   :left     "0px"}
+                                                  {})}
+                     [:h4 {:style {:marginLeft "20px"}} "Builds"]
+                     (let [click-handler (fn [e]
+                                           (swap! app-state assoc :snapshot/id (.-id e)))
+                           snaps-for-bar-chart (->> snaps
+                                                    (mapv (fn convert-date [snap]
+                                                            (update snap :when #(js/Date. %))))
+                                                    (mapv (fn sum-module-sizes [snap]
+                                                            (-> snap
+                                                                (merge {:size            (->> (:modules snap)
+                                                                                              (map :size)
+                                                                                              (reduce +))
+                                                                        :size-compressed (->> (:modules snap)
+                                                                                              (map :size-compressed)
+                                                                                              (reduce +))})
+                                                                (dissoc :modules)))))
+                           chart (d3/bar-chart-horizontal! (:bar-width chart-sizes) (+ 50 (* 20 (count snaps)))
+                                                           snaps-for-bar-chart
+                                                           {:on-click  click-handler
+                                                            :value-key :size})]
+                       [:div {}
+                        (d3/container {:d3fn            chart
+                                       :animateDuration 1000})])]])
+
+                 [:div {:style {:float "left"}}
+                  (let [snap (snapshot source (:snapshot/id @app-state))
+                        tooltip (fn [d]
+                                  (gstring/format "<p>%s</p><p>Compiled: %s</p>"
+                                                  (.. d -data -name)
+                                                  (d3/size-string (.. d -data -size))))]
+                    (if-let [explain (s/explain-data ::viz/snapshot snap)]
+                      [:div {} "Invalid snapshot data"
+                       [:p {} explain]]
+                      (for [module snap]
+                        [:div {:key (:id module)}
+                         [:h3 {} (gstring/format "Module: %s ( %s )"
+                                                 (:label module)
+                                                 (d3/size-string (:size module)))]
+                         (d3/container {:d3fn (d3/tree-map! (:tree-width chart-sizes)
+                                                            (int (* (:tree-width chart-sizes) .6))
+                                                            (:tree module)
+                                                            {:legend-padding  legend-padding
+                                                             :legend-height   legend-height
+                                                             :tooltip-content tooltip})})])))]]
                 [:div {:style {:clear "both"}}]])
              [:div {} "Loading.."])))})))
 
@@ -113,5 +122,5 @@
                        :snapshots (js->clj js/snapshots)}))
 
 (defn ^:export init []
-  (r/render [app-component (source-from-globals)]
+  (r/render [app-component (source-from-globals) {}]
             (js/document.getElementById "app")))
