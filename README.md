@@ -20,7 +20,7 @@ Initially supports Shadow CLJS but can support any compilation source.
 
 **Prerequisite**
 
-Stu assumes you have already generated one or more snapshots. These are typically in the .shadow-cljs/release-snapshots/<app name> directory.
+Stu assumes you have already generated one or more snapshots. These are typically in the .shadow-cljs/release-snapshots/&lt;app name&gt; directory.
 To generate snapshot(s) you invoke
 
 `(shadow/release-snapshot :app {:tag "0.8"})` with your own tag or...
@@ -41,7 +41,7 @@ Any other way of invoking *stu.illuminate/-main* is valid e.g. the Shadow CLJS *
 
 ## Design
 
-Stu is a single component which uses a protocol to provide data. That data is checking using a spec to ensure it's correct.
+Stu is a reagent component which is passed protocol impl to provide data. That data is checking using a spec to ensure it's correct.
 
 This provides two benefits:
 
@@ -73,15 +73,14 @@ but can also be used to test and develop itself. Examples include:
 ## Development
 
 * start a lein REPL and `(start-dev!)`
-* TODO url/description for devcards and dev app.
-* after each change, use (update-sample!) to refresh the sample. needs snapshots. use TODO git log generator
+* navigate your browser to http://localhost:8280/devcards.html and explore.
+* notice the *Run Viz Application* link which runs the full App in dev mode, with hot code-loading, same as devcards
 
 ## Roadmap
 
-* multi-module viz
+* transition/toggle between size and gzipped
+* transition/toggle between source and js size (shows closure value)
 * zoom transitions
-* toggle between size and gzipped
-* toggle between source and js size (shows closure value)
 * legend tooltips (size and %)
 * bar tooltips (show size, gzipped and size diff from prev)
 * generate and commit viz for this app in CI
