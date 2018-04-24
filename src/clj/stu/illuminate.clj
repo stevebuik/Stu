@@ -102,7 +102,9 @@
                      :file-name string?))
 
 (defn generate-shadow-viz!
-  [snapshots-dir file-name {:keys [title]}]
+  [snapshots-dir file-name {:keys [title
+                                   sort-strategy]
+                            :or   {sort-strategy :timestamp}}]
   (println (format "Generating %s from %s.." file-name snapshots-dir))
   (let [releases (->> (fs/list-dir snapshots-dir)
                       (sort-by fs/mod-time)
@@ -112,7 +114,10 @@
         summaries (->> releases
                        (map with-bundle-file)
                        (filter fs/exists?)                  ; only snapshot dirs should be used e.g. remove .DS_Store
-                       (sort-by fs/mod-time)
+                       (sort-by (fn [f]
+                                  (case sort-strategy
+                                    :timestamp (fs/mod-time f)
+                                    :name f)))
                        reverse
                        (mapv shadow-bundle->summary))
         snapshot-map (->> releases
@@ -136,7 +141,8 @@
   []
   (generate-shadow-viz! ".shadow-cljs/release-snapshots/app"
                         "resources/public/stu-builds.html"
-                        {:title "Stu App Sizes"}))
+                        {:title         "Stu App Sizes"
+                         :sort-strategy :name}))
 
 (def cli-options [["-d" "--dir DIR" "Shadow CLJS snapshots directory"
                    :default ".shadow-cljs/release-snapshots/app"
