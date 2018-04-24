@@ -112,6 +112,8 @@
         summaries (->> releases
                        (map with-bundle-file)
                        (filter fs/exists?)                  ; only snapshot dirs should be used e.g. remove .DS_Store
+                       (sort-by fs/mod-time)
+                       reverse
                        (mapv shadow-bundle->summary))
         snapshot-map (->> releases
                           (filter (fn [dir]
