@@ -12,6 +12,21 @@ Initially supports Shadow CLJS but can support any compilation source.
 
 ## Usage
 
+**Prerequisite**
+
+Stu assumes you have already generated one or more snapshots. These are typically in the .shadow-cljs/release-snapshots/<app name> directory.
+To generate snapshot(s) you invoke
+
+`(shadow/release-snapshot :app {:tag "0.8"})` with your own tag or...
+
+`(shadow/release-snapshot :app {})` to generate a *latest* snapshot.
+
+In future this manual step [will be automated](https://github.com/stevebuik/Stu/issues/2) into another CLI by some genius developer whose help will be greatly appreciated.
+
+**Illumination**
+
+To generate the html report, use the *illuminate* CLI.
+
 `lein run -m stu.illuminate` invokes the command line with default args.
 
 `lein run -m stu.illuminate -h` provides docs and default values for args.
@@ -20,14 +35,40 @@ Any other way of invoking *stu.illuminate/-main* is valid e.g. the Shadow CLJS *
 
 ## Design
 
-* Generic so that other (non-shadow) data sources can be used
-* snapshots are loaded from transit strings to minimise file size and cljs mem
+Stu is a single component which uses a protocol to provide data. That data is checking using a spec to ensure it's correct.
+
+This provides two benefits:
+
+1. The component can be run in devcards using different/simple impls of the protocol to display different behaviours.
+2. The spec allows any other CLJS compiler capable of generating the data to also use Stu. e.g.
+    * cljs.main
+    * cljs-build
+
+Stu uses [react faux dom](https://github.com/Olical/react-faux-dom) to simplify the use of D3 interop.
+Instead of worrying about how to handle D3s mutations vs Reacts purity, this allows the d3 interop code to be copied directly from javascript examples, including mutations.
+This makes the d3 charts much simpler to write.
+
+Using Stu on a large app with many snapshots could generate a large dataset.
+The generated data is appended to the static output file using a JSON map with the treemap data encoded using transit.
+This allows the GlobalsSource to load only one dataset at a time which mimimises memory consumption.
+The use of transit reduces the data size due to it's keyword caching.
+
+In practice, these space savings are small compared to the size of the Stu app javascript but that may improve in future as npm deps can be processed by Google Closure.
+
+## Stu Naval Gazing
+
+Since Stu is a CLJS app, it can be used on itself. This is great because it provides a good example (see link above)
+but can also be used to test and develop itself. Examples include:
+
+1. The sample app above
+2. The development app running with recorded data
+3. The (meager) tests can use a "latest" snapshot to ensure a valid transformation
 
 ## Development
 
 * start a lein REPL and `(start-dev!)`
-* after each change, please re-generate the viz for this app so that it's current
-* if working on the viz.app/GlobalsSource, use (update-sample!) to refresh the sample
+* TODO url/description for devcards and dev app.
+* after each change, use (update-sample!) to refresh the sample. needs snapshots. use TODO git log generator
 
 ## Roadmap
 
@@ -38,7 +79,6 @@ Any other way of invoking *stu.illuminate/-main* is valid e.g. the Shadow CLJS *
 * bar tooltips
 * generate and commit viz for this app in CI
 * s3 persistence of bundles
-* script to generate bundles from git log
 * cljs.main generation/illumination
 * cljs-build generation/illumination
 

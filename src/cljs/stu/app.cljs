@@ -83,6 +83,8 @@
                         (transit/read reader (get snapshots id)))))
 
 (defn source-from-globals
+  "return a source that de-couples the data from the app code by loading it from global js vars in the host page.
+  this allows generated data to be combined with app code to make a standalone html page."
   []
   (map->GlobalsSource {:title     js/title
                        :summaries (js->clj js/summaries :keywordize-keys true)

@@ -120,6 +120,9 @@
                                  [(id-from-path release-dir)
                                   (shadow-bundle->snapshot (with-bundle-file release-dir))]))
                           (into {}))]
+    ; uncomment line(s) below when updating sample-data.cljs
+    ;(pprint summaries)
+    ;(pprint snapshot-map)
     (spit-viz! title summaries snapshot-map file-name)
     (println "Generation complete.")))
 

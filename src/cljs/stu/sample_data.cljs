@@ -1,4 +1,5 @@
-(ns stu.sample-data)
+(ns ^{:doc "this is is recorded from illuminate/generate-shadow-viz! i.e. is a real example"}
+stu.sample-data)
 
 ; data captured from generation from this apps bundles
 
