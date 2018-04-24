@@ -10,6 +10,8 @@ Notice that cljs.pprint was used in Stu in early versions.
 After seeing how much code it generated, it was removed from all app code.
 You can see that reduction in size as you move between builds.
 
+You can also see when Stu was code-split, becoming two modules. Code split apps show one treemap for each module.
+
 Stu is invoked using the command line (or the REPL), intended to be run in a CI server.
 
 Initially supports Shadow CLJS but can support any compilation source.
@@ -78,9 +80,10 @@ but can also be used to test and develop itself. Examples include:
 
 * multi-module viz
 * zoom transitions
+* toggle between size and gzipped
 * toggle between source and js size (shows closure value)
 * legend tooltips (size and %)
-* bar tooltips
+* bar tooltips (show size, gzipped and size diff from prev)
 * generate and commit viz for this app in CI
 * s3 persistence of bundles
 * cljs.main generation/illumination

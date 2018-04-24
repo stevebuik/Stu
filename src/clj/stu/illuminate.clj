@@ -9,7 +9,8 @@
     [cognitect.transit :as transit]
     [clojure.string :as str]
     [clojure.java.io :as io]
-    [clojure.tools.cli :as cli])
+    [clojure.tools.cli :as cli]
+    [clojure.set :as set])
   (:import (java.io ByteArrayOutputStream)))
 
 (defn top-level
@@ -20,13 +21,9 @@
 (s/fdef top-level
         :args (s/cat :node ::stu/node))
 
-; TODO multiple modules per bundle when code splitting in place
-(defn shadow-bundle->tree
-  [bundle]
-  (->> bundle
-       :build-modules
-       first
-       :source-bytes
+(defn shadow-module->tree
+  [js-sizes-by-resource-name module]
+  (->> (:source-bytes module)
        (mapv (fn [[resource-name size]]
                {:name resource-name :size size}))
        (sort-by :name)
@@ -36,8 +33,8 @@
                {:name     k
                 :children v}))
        (hash-map :name "app" :children)))
-(s/fdef shadow-bundle->tree
-        :args (s/cat :bundle map?)
+(s/fdef shadow-module->tree
+        :args (s/cat :sizes map? :bundle map?)
         :ret ::stu/tree)
 
 (defn parent-dir
@@ -49,22 +46,39 @@
 
 (defn shadow-bundle->snapshot
   [file-name]
-  (let [parsed (edn/read-string (slurp file-name))]
-    {:id    (parent-dir file-name)
-     :label (parent-dir file-name)
-     :when  (fs/mod-time file-name)
-     :tree  (shadow-bundle->tree parsed)}))
+  (let [parsed (edn/read-string (slurp file-name))
+        js-sizes-by-resource-name (->> (:build-sources parsed)
+                                       (map (juxt :resource-name :js-size))
+                                       (into {}))]
+    (->> (:build-modules parsed)
+         (mapv (fn [module]
+                 {:id          (name (:module-id module))
+                  :label       (name (:module-id module))
+                  :when        (fs/mod-time file-name)
+                  :size        (->> (:source-bytes module)
+                                    vals
+                                    (reduce +))
+                  :size-before (->> (:build-sources parsed)
+                                    (map :js-size)
+                                    (reduce +))
+                  :tree        (shadow-module->tree js-sizes-by-resource-name module)})))))
 (s/fdef shadow-bundle->snapshot
         :args (s/cat :file-name string?)
         :ret ::stu/snapshot)
 
 (defn shadow-bundle->summary
   [file-name]
-  (let [parsed (edn/read-string (slurp file-name))]
-    {:id    (parent-dir file-name)
-     :label (parent-dir file-name)
-     :when  (fs/mod-time file-name)
-     :value (get-in parsed [:build-modules 0 :js-size])}))
+  (let [parsed (edn/read-string (slurp file-name))
+        modules (->> (:build-modules parsed)
+                     (mapv (fn [module]
+                             (-> module
+                                 (select-keys [:module-id :js-size :gzip-size])
+                                 (set/rename-keys {:js-size   :size
+                                                   :gzip-size :size-compressed})))))]
+    {:id      (parent-dir file-name)
+     :label   (parent-dir file-name)
+     :when    (fs/mod-time file-name)
+     :modules modules}))
 (s/fdef shadow-bundle->summary
         :args (s/cat :file-name string?)
         :ret ::stu/summary)
@@ -76,24 +90,33 @@
        io/resource
        slurp))
 
+(defn transit-string
+  [v]
+  (let [out (ByteArrayOutputStream. 4096)
+        writer (transit/writer out :json)]
+    (transit/write writer v)
+    (.toString out)))
+
 (defn spit-viz!
   [title summaries snapshots file-name]
   (let [template-contents (load-resource "stu-host-page.html")
         app-script-contents (load-resource "stu-app-release.js")
+        shared-script-contents (load-resource "stu-shared-release.js")
         css-contents (load-resource "public/app.css")
+        ; encoding snapshots tree data using transit to reduce size
         snapshots-as-transit (->> snapshots
                                   (map (fn [[k v]]
                                          ; encode each snapshot as a transit string to minimise chars
-                                         (let [out (ByteArrayOutputStream. 4096)
-                                               writer (transit/writer out :json)]
-                                           (transit/write writer v)
-                                           [k (.toString out)])))
+                                         [k (transit-string v)]))
                                   (into {}))
+        ; encoding summaries using transit to preserve keywords
+        summaries-as-transit (transit-string summaries)
         full-contents (-> template-contents
                           (str/replace "***app***" app-script-contents)
+                          (str/replace "***shared***" shared-script-contents)
                           (str/replace "***css***" css-contents)
                           (str/replace "***title***" title)
-                          (str/replace "***summaries***" (json/write-str summaries))
+                          (str/replace "***summaries***" (json/write-str summaries-as-transit))
                           (str/replace "***snapshots***" (json/write-str snapshots-as-transit)))]
     (spit file-name full-contents)))
 (s/fdef spit-viz!

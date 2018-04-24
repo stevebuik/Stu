@@ -20,7 +20,8 @@
 (defn bar-chart-horizontal!
   "HOF returning a fn that mutates a dom div, adding a d3 bar chart.
    The data arg is a seq of maps containing :label, :id and :value"
-  [svg-width svg-height data {:keys [on-click]}]
+  [svg-width svg-height data {:keys [on-click value-key]
+                              :or   {value-key :size}}]
   (fn [chart-div]
     (let [svg (.. d3 (select chart-div)
                   (append "svg")
@@ -30,7 +31,7 @@
           width (- svg-width (:left margin) (:right margin))
           height (- svg-height (:top margin) (:bottom margin))
           x (.. d3 scaleLinear
-                (domain (clj->js [0 (reduce max (map :value data))])) ; input
+                (domain (clj->js [0 (reduce max (map value-key data))])) ; input
                 (range #js [0 width]))                      ; output
           y (.. d3 scaleLinear
                 (domain (clj->js [0 (count data)]))
@@ -49,7 +50,8 @@
                          (attr "class" "bar")
                          (attr "x" 0)
                          (attr "y" (fn [d] (y (.-position d)))) ; use index for y position
-                         (attr "width" (fn [d i] (x (.-value d))))
+                         (attr "width" (fn [d i]
+                                         (x (aget d (name value-key)))))
                          (attr "height" (- (/ height (count data)) 1)))]
         (when on-click
           (.. new-bars
