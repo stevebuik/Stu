@@ -17,19 +17,20 @@
 
 ;;;; CHARTS ;;;;
 
+(def bar-chart-margins {:top 0 :right 20 :bottom 50 :left 70})
+
 (defn bar-chart-horizontal!
   "HOF returning a fn that mutates a dom div, adding a d3 bar chart.
-   The data arg is a seq of maps containing :label, :id and :value"
+   The data arg is a seq of maps containing :label, :id and value-key used for bar width."
   [svg-width svg-height data {:keys [on-click value-key]
                               :or   {value-key :size}}]
   (fn [chart-div]
-    (let [svg (.. d3 (select chart-div)
+    (let [svg (.. (d3/select chart-div)                     ; convert to div to d3
                   (append "svg")
                   (attr "width" svg-width)
                   (attr "height" svg-height))
-          margin {:top 0 :right 20 :bottom 50 :left 70}
-          width (- svg-width (:left margin) (:right margin))
-          height (- svg-height (:top margin) (:bottom margin))
+          width (- svg-width (:left bar-chart-margins) (:right bar-chart-margins))
+          height (- svg-height (:top bar-chart-margins) (:bottom bar-chart-margins))
           x (.. d3 scaleLinear
                 (domain (clj->js [0 (reduce max (map value-key data))])) ; input
                 (range #js [0 width]))                      ; output
@@ -38,24 +39,26 @@
                 (range #js [0 height]))
           g (.. svg
                 (append "g")
-                (attr "transform" (str "translate(" (:left margin) "," (:top margin) ")")))
-          data-indexed (clj->js (map-indexed #(assoc %2 :position %1) data))]
+                (attr "class" "chart-container")
+                (attr "transform" (str "translate(" (:left bar-chart-margins) "," (:top bar-chart-margins) ")")))
+          data-indexed (clj->js (map-indexed #(assoc %2 :position %1) data))
+          bars (.. g
+                   (selectAll ".bar")
+                   (data data-indexed))
+          new-bars (.. bars
+                       (enter)
+                       (append "rect")
+                       (attr "class" "bar")
+                       (attr "x" 0)
+                       (attr "y" (fn [d] (y (.-position d)))) ; use index for y position
+                       (attr "width" (fn [d i]
+                                       (x (aget d (name value-key)))))
+                       (attr "height" (- (/ height (count data)) 1)))]
 
-      (let [bars (.. g
-                     (selectAll ".bar")
-                     (data data-indexed))
-            new-bars (.. bars
-                         (enter)
-                         (append "rect")
-                         (attr "class" "bar")
-                         (attr "x" 0)
-                         (attr "y" (fn [d] (y (.-position d)))) ; use index for y position
-                         (attr "width" (fn [d i]
-                                         (x (aget d (name value-key)))))
-                         (attr "height" (- (/ height (count data)) 1)))]
-        (when on-click
-          (.. new-bars
-              (on "click" on-click))))
+      ; add click handler to bars when present
+      (when on-click
+        (.. new-bars
+            (on "click" on-click)))
 
       ; x-axis
       (.. g
@@ -86,6 +89,30 @@
           (attr "dy" "1.2em")))
     ; return nothing : side-effecting
     nil))
+
+(defn bar-chart-horizontal-transition!
+  "generate a d3 transition by using the values. only supports update transitions i.e. no bar adds or removes."
+  [data container width height value-key duration]
+
+  (let [connect (.-connectFauxDOM (.-props container))      ; get connect fn from props
+        animate (.-animateFauxDOM (.-props container))      ; get animate fn from props
+        faux (connect "div" "chart")                        ; re-connect faux dom
+        data-indexed (clj->js (map-indexed #(assoc %2 :position %1) data))
+        bars (.. (d3/select faux)
+                 (selectAll ".bar")
+                 (data data-indexed))
+        width (- width (:left bar-chart-margins) (:right bar-chart-margins))
+        x (.. d3 scaleLinear
+              (domain (clj->js [0 (reduce max (map value-key data))]))
+              (range #js [0 width]))]
+    (.. bars
+        (transition)
+        (duration duration)
+        (attr "width" (fn [d]
+                        (x (aget d (name value-key))))))
+
+    ; re-render of container using faux dom
+    (animate duration)))
 
 (defn tree-map!
   "HOF returning a fn that mutates a dom div, adding a d3 tree-map"
@@ -198,32 +225,39 @@
 ; hinted fns to block munging for the custom props i.e. avoid need for externs
 (defn- duration [^js props] (.-animateDuration props))
 (defn- mutations [^js props] (.-d3fn props))
+(defn- updateFunctions [^js props] (.-updateFunctions props))
 (defn- chart [^js props] (.-chart props))
 
-(defn didMount
-  []
-  (this-as this
-    (let [connect (.-connectFauxDOM (.-props this))
-          animate (.-animateFauxDOM (.-props this))
-          animation-duration (duration (.-props this))
-          faux (connect "div" "chart")
-          d3-mutations (mutations (.-props this))]
-      (d3-mutations faux)
-      (when animation-duration
-        (animate animation-duration))
-      nil)))
-
-; TODO pass in the faux so it can be re-used for transitions
 (def Container
   (create-class
-    #js {:componentDidMount didMount
+    #js {:componentDidMount (fn []
+                              (this-as this
+                                (let [connect (.-connectFauxDOM (.-props this))
+                                      animate (.-animateFauxDOM (.-props this))
+                                      animation-duration (duration (.-props this))
+                                      update-fns (updateFunctions (.-props this))
+                                      d3-mutations (mutations (.-props this))]
+
+                                  ; callback to parent component to provide access for updates
+                                  (when update-fns (update-fns this))
+
+                                  ; create the faux div and store in the "chart" prop
+                                  (let [faux (connect "div" "chart")]
+                                    (d3-mutations faux))
+
+                                  ; initial animate if required
+                                  (when animation-duration (animate animation-duration))
+
+                                  nil)))
          :render            (fn []
                               (this-as this
-                                (.createElement react "div" nil
-                                                (chart (.-props this)))))}))
+                                (if-let [c (chart (.-props this))]
+                                  c                         ; return the faux node when present
+                                  ; otherwise create a div so that something is always returned by render
+                                  (.createElement react "div" #js {:className "placeholder"}))))}))
 
 (defn container
-  "create a plain (not om) create component using a faux dom and a fn to mutate that dom.
+  "create a plain component using a faux dom and a fn to mutate that dom.
    the props must contain a :d3fn arity-1 fn that performs the d3 mutation"
   [props]
   (.createElement react (faux-dom/withFauxDOM Container) (clj->js props)))
