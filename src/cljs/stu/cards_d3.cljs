@@ -20,14 +20,14 @@
         state (r/atom {:key :size})
         ; create the d3 element outside of render since it holds the faux dom in its state
         ; and that is re-used by transitions
-        chart-element (d3/container {:d3fn            (d3/bar-chart-horizontal! width
-                                                                                height
-                                                                                data
-                                                                                {:on-click  click-handler
-                                                                                 :value-key (:key @state)})
-                                     :updateFunctions (fn keep-container-reference
-                                                        [chart-container]
-                                                        (swap! state assoc :container chart-container))})]
+        chart-element (d3/container {:d3fn              (d3/bar-chart-horizontal! width
+                                                                                  height
+                                                                                  data
+                                                                                  {:on-click  click-handler
+                                                                                   :value-key (:key @state)})
+                                     :containerCallback (fn keep-container-reference
+                                                          [chart-container]
+                                                          (swap! state assoc :container chart-container))})]
     (fn [data]
       (r/create-class
         {:component-did-update (fn [_]
@@ -35,6 +35,7 @@
                                                                       (:container @state)
                                                                       width
                                                                       height
+                                                                      (:key @state)
                                                                       (:key @state)
                                                                       1000))
          :reagent-render       (fn []

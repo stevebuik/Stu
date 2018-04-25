@@ -42,11 +42,11 @@
                         {:fixed-bars? false}]))
 
 (defcard invalid-summary-data
-         (r/as-element [app/app-component (reify app/Source
-                                            (title [_] "empty")
-                                            (snapshots [_] [:bad-summary])
-                                            (snapshot [_ id] {}))
-                        {:fixed-bars? false}]))
+           (r/as-element [app/app-component (reify app/Source
+                                              (title [_] "empty")
+                                              (snapshots [_] [:bad-summary])
+                                              (snapshot [_ id] {}))
+                          {:fixed-bars? false}]))
 
 (defcard invalid-snapshot-data
          (r/as-element [app/app-component (reify app/Source

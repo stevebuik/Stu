@@ -92,8 +92,7 @@
 
 (defn bar-chart-horizontal-transition!
   "generate a d3 transition by using the values. only supports update transitions i.e. no bar adds or removes."
-  [data container width height value-key duration]
-
+  [data container width height scale-key value-key duration]
   (let [connect (.-connectFauxDOM (.-props container))      ; get connect fn from props
         animate (.-animateFauxDOM (.-props container))      ; get animate fn from props
         faux (connect "div" "chart")                        ; re-connect faux dom
@@ -103,7 +102,7 @@
                  (data data-indexed))
         width (- width (:left bar-chart-margins) (:right bar-chart-margins))
         x (.. d3 scaleLinear
-              (domain (clj->js [0 (reduce max (map value-key data))]))
+              (domain (clj->js [0 (reduce max (map scale-key data))]))
               (range #js [0 width]))]
     (.. bars
         (transition)
@@ -225,7 +224,7 @@
 ; hinted fns to block munging for the custom props i.e. avoid need for externs
 (defn- duration [^js props] (.-animateDuration props))
 (defn- mutations [^js props] (.-d3fn props))
-(defn- updateFunctions [^js props] (.-updateFunctions props))
+(defn- containerCallback [^js props] (.-containerCallback props))
 (defn- chart [^js props] (.-chart props))
 
 (def Container
@@ -235,15 +234,17 @@
                                 (let [connect (.-connectFauxDOM (.-props this))
                                       animate (.-animateFauxDOM (.-props this))
                                       animation-duration (duration (.-props this))
-                                      update-fns (updateFunctions (.-props this))
+                                      callback (containerCallback (.-props this))
                                       d3-mutations (mutations (.-props this))]
 
                                   ; callback to parent component to provide access for updates
-                                  (when update-fns (update-fns this))
+                                  (when callback (callback this))
 
                                   ; create the faux div and store in the "chart" prop
                                   (let [faux (connect "div" "chart")]
-                                    (d3-mutations faux))
+
+                                    ; mutations might be delayed so being defensive
+                                    (when d3-mutations (d3-mutations faux)))
 
                                   ; initial animate if required
                                   (when animation-duration (animate animation-duration))
