@@ -80,9 +80,13 @@ but can also be used to test and develop itself. Examples include:
 
 * transition/toggle between size and gzipped
 * transition/toggle between source and js size (shows closure value)
-* zoom transitions
+* zoom transitions (clicks on groups or on legend)
+* how did that get in there? data is available in 2.3.5. make backward compatible
 * legend tooltips (size and %)
 * bar tooltips (show size, gzipped and size diff from prev)
+* tests for cljs app e.g. when bar clicked, tree-map will change
+* optional write of snapshot edn to a file in same loc as html file
+* another CLI fn that checks snapshot edn for large changes in size and exits error if exceeded
 * generate and commit viz for this app in CI
 * s3 persistence of bundles
 * cljs.main generation/illumination
