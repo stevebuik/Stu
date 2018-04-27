@@ -52,9 +52,11 @@
 
 (defn tree-tooltip
   [d]
-  (gstring/format "<p>%s</p><p>Compiled: %s</p>"
-                  (.. d -data -name)
-                  (d3/size-string (.. d -data -size))))
+  (let [data (.-data d)]
+    (gstring/format "<p>%s</p><p>Compiled: %s</p><p>Before Closure compile: %s</p>"
+                    (.-name data)
+                    (d3/size-string (aget data "size"))
+                    (d3/size-string (aget data "size-before")))))
 
 (def tree-map-opts {:legend-padding  10
                     :legend-height   20
