@@ -25,7 +25,7 @@
   [svg-width svg-height data {:keys [on-click value-key]
                               :or   {value-key :size}}]
   (fn [chart-div]
-    (let [svg (.. (d3/select chart-div)                     ; convert to div to d3
+    (let [svg (.. d3 (select chart-div)                     ; convert to div to d3
                   (append "svg")
                   (attr "width" svg-width)
                   (attr "height" svg-height))
@@ -97,7 +97,7 @@
         animate (.-animateFauxDOM (.-props container))      ; get animate fn from props
         faux (connect "div" "chart")                        ; re-connect faux dom
         data-indexed (clj->js (map-indexed #(assoc %2 :position %1) data))
-        bars (.. (d3/select faux)
+        bars (.. d3 (select faux)
                  (selectAll ".bar")
                  (data data-indexed))
         width (- width (:left bar-chart-margins) (:right bar-chart-margins))
@@ -135,6 +135,13 @@
   "return the id from a d3 javascript object"
   [d] (.. d -data -id))
 
+(defn cell-shows-label?
+  "predicate true when a tree-map cell should display a label"
+  [d]
+  (let [width (- (.-x1 d) (.-x0 d))
+        height (- (.-y1 d) (.-y0 d))]
+    (and (> width 50) (> height 15))))
+
 (defn tree-map!
   "HOF returning a fn that mutates a dom div, adding a d3 tree-map"
   [svg-width svg-height data {:keys [value-key legend-height legend-padding tooltip-content title-string]
@@ -148,7 +155,7 @@
     (let [legend-offset (+ legend-height legend-padding)
           {:keys [width height]} (tree-map-dimensions svg-width svg-height legend-height legend-padding margin)
           color (.. d3
-                    (scaleOrdinal d3/schemeSet3)            ; https://github.com/d3/d3-scale-chromatic
+                    (scaleOrdinal d3/schemeCategory10)      ; https://github.com/d3/d3-scale-chromatic
                     (domain (clj->js (map :name (:children data))))) ; set the colors so they can be used in the legend as well
           treemap (.. d3 treemap
                       (tile d3/treemapSquarify)
@@ -204,14 +211,13 @@
                                              (style "display" "none")))))]
           ; add text inside g to show a label
           (.. cells
-              (filter (fn [d]
-                        (let [width (- (.-x1 d) (.-x0 d))
-                              height (- (.-y1 d) (.-y0 d))]
-                          (and (> width 50) (> height 25)))))
+              ;(filter cell-shows-label?)                    ; this is d3/filter, not cljs
               (append "text")
+              (attr "class" "cell-text")
               (attr "x" 5)
               (attr "y" 15)
-              (text (fn [d] (last (str/split (.. d -data -name) #"/"))))))
+              (text (fn [d] (last (str/split (.. d -data -name) #"/"))))
+              (style "opacity" (fn [d] (if (cell-shows-label? d) 1 0)))))
 
         (let [legend (.. svg
                          (append "g")
@@ -272,12 +278,12 @@
             (tween "text" (fn []
                             (this-as this
                               (fn [i]
-                                (.. (d3/select this)
+                                (.. d3 (select this)
                                     (text (gstring/format title-string (size-string (+ old-value (* i diff)))))))))))))
 
     (treemap root)                                          ; calc new layout
 
-    (let [cells (.. (d3/select faux)
+    (let [cells (.. d3 (select faux)
                     (selectAll ".cell")                     ; the g container
                     ; re-join the new layout
                     (data (.. root leaves) data-id))]
@@ -288,15 +294,24 @@
           (duration duration)
           (attr "transform" (fn [d] (str "translate(" (.-x0 d) "," (+ (.-y0 d) legend-offset) ")"))))
 
-      ; concurrently, resize the rects inside the g
-      (.. (d3/select faux)
-          (selectAll ".cell-rect")                          ; the rects
-          ; re-join the new layout
-          (data (.. root leaves) data-id)
-          (transition)
-          (duration duration)
-          (attr "width" (fn [d] (- (.-x1 d) (.-x0 d))))
-          (attr "height" (fn [d] (- (.-y1 d) (.-y0 d))))))
+      ; concurrently, change the rects
+      (let [rects-updated (.. d3 (select faux)
+                              (selectAll ".cell-rect")      ; the rects
+                              ; re-join the new layout
+                              (data (.. root leaves) data-id))]
+
+        (.. rects-updated
+            (transition)
+            (duration duration)
+            (attr "width" (fn [d] (- (.-x1 d) (.-x0 d))))
+            (attr "height" (fn [d] (- (.-y1 d) (.-y0 d))))
+            ; TODO find a way to do this with an opacity transition
+            (on "start" (fn [d i]
+                          (this-as this
+                            (let [new-opacity (if (cell-shows-label? d) 1 0)]
+                              (.. d3 (select (.-parentNode this)) ; need parent since text is sibling of rect
+                                  (select ".cell-text")
+                                  (style "opacity" new-opacity)))))))))
 
     ; re-render of container using faux dom
     (animate duration)))

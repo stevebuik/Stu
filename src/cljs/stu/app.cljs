@@ -195,19 +195,6 @@
                                         [:div {:style {:marginLeft   "20px"
                                                        :marginBottom "20px"}}
                                          [:h4 {} "Builds"]
-                                         [:div {:className "toggle"}
-                                          [:label {:className "switch"}
-                                           [:input {:type     "checkbox"
-                                                    :checked  (= :size-compressed (:bar-chart-key @app-state))
-                                                    :onChange (fn [e]
-                                                                (swap! app-state assoc :bar-chart-key
-                                                                       (get {:size            :size-compressed
-                                                                             :size-compressed :size}
-                                                                            (:bar-chart-key @app-state))))}]
-                                           [:span {:className "slider round"}]]
-                                          [:label {:className "label"}
-                                           (get {:size            "Uncompressed"
-                                                 :size-compressed "GZipped"} (:bar-chart-key @app-state))]]
 
                                          [:div {:className "toggle"}
                                           [:label {:className "switch"}
@@ -221,7 +208,21 @@
                                            [:span {:className "slider round"}]]
                                           [:label {:className "label"}
                                            (get {:size        "Compiled"
-                                                 :size-before "Pre-Closure"} (:tree-map-key @app-state))]]]
+                                                 :size-before "Pre-Closure"} (:tree-map-key @app-state))]]
+
+                                         [:div {:className "toggle"}
+                                          [:label {:className "switch"}
+                                           [:input {:type     "checkbox"
+                                                    :checked  (= :size-compressed (:bar-chart-key @app-state))
+                                                    :onChange (fn [e]
+                                                                (swap! app-state assoc :bar-chart-key
+                                                                       (get {:size            :size-compressed
+                                                                             :size-compressed :size}
+                                                                            (:bar-chart-key @app-state))))}]
+                                           [:span {:className "slider round"}]]
+                                          [:label {:className "label"}
+                                           (get {:size            "Uncompressed"
+                                                 :size-compressed "GZipped"} (:bar-chart-key @app-state))]]]
 
                                         [:div {}
                                          (if-let [bar-chart (:bar-chart-singleton @app-state)]

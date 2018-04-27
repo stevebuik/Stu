@@ -1,5 +1,7 @@
 (ns stu.cards-d3
   (:require
+    [goog.string :as gstring]
+    [goog.string.format]                                    ; required or release compile will generate invalid js
     [reagent.core :as r]
     [devcards.core :as dc :include-macros true :refer-macros [defcard defcard-doc deftest]]
     [stu.d3 :as d3]))
@@ -55,9 +57,18 @@
                                  (take 10 (repeatedly #(rand-int 2500))))]
            (r/as-element [stateful-bar-chart data])))
 
+(defn tree-tooltip
+  [d]
+  (let [data (.-data d)]
+    (gstring/format "<p>%s</p><p>Size: %s</p><p>Before: %s</p>"
+                    (.-name data)
+                    (d3/size-string (aget data "size"))
+                    (d3/size-string (aget data "size-uncompiled")))))
+
 (defn stateful-tree-map
   [data]
-  (let [opts {:title-string "Module : fake ( %s )"}
+  (let [opts {:title-string    "Module : fake ( %s )"
+              :tooltip-content tree-tooltip}
         state (r/atom {:key :size})
         chart-element (d3/container {:d3fn              (d3/tree-map! 800 300 data opts)
                                      :containerCallback (fn keep-container-reference
@@ -84,10 +95,10 @@
                      :children [{:name     "analytics"
                                  :children [{:name "agg" :size 2000 :size-uncompiled 2000}
                                             {:name "comm" :size 3000 :size-uncompiled 3000}
-                                            {:name "heir" :size 4000 :size-uncompiled 4000}
-                                            {:name "merge" :size 3000 :size-uncompiled 3000}]}
+                                            {:name "heir" :size 400 :size-uncompiled 4000}
+                                            {:name "merge" :size 3000 :size-uncompiled 300}]}
                                 {:name     "perf"
-                                 :children [{:name "css" :size 3000 :size-uncompiled 6000}
+                                 :children [{:name "css" :size 200 :size-uncompiled 6000}
                                             {:name "images" :size 8000 :size-uncompiled 15000}]}]}]
            (r/as-element [stateful-tree-map data])))
 

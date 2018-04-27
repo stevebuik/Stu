@@ -167,7 +167,7 @@
   []
   (generate-shadow-viz! ".shadow-cljs/release-snapshots/app"
                         "resources/public/stu-builds.html"
-                        {:title         "Stu App Sizes"
+                        {:title         "Stu App Compilation History"
                          :sort-strategy :name}))
 
 (def cli-options [["-d" "--dir DIR" "Shadow CLJS snapshots directory"
