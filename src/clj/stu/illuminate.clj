@@ -25,7 +25,10 @@
   [js-sizes-by-resource-name module]
   (->> (:source-bytes module)
        (mapv (fn [[resource-name size]]
-               {:name resource-name :size size}))
+               (let [before (get js-sizes-by-resource-name resource-name)]
+                 (cond-> {:name resource-name
+                          :size size}
+                         before (assoc :size-before before)))))
        (sort-by :name)
        (group-by top-level)
        (mapv (fn top-level-node
