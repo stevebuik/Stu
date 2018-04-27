@@ -9,13 +9,13 @@
   ## D3 charts with transitions
   ")
 
-(defn bar-container
+(defn stateful-bar-chart
   "a reagent component with enough state to demo d3 transitions"
   [data]
   (let [click-handler (fn [d]
                         (this-as this
                           (js/console.log d)))
-        width 500
+        width 600
         height 200
         state (r/atom {:key :size})
         ; create the d3 element outside of render since it holds the faux dom in its state
@@ -34,7 +34,6 @@
                                  (d3/bar-chart-horizontal-transition! data
                                                                       (:container @state)
                                                                       width
-                                                                      height
                                                                       (:key @state)
                                                                       (:key @state)
                                                                       1000))
@@ -54,22 +53,42 @@
                                             :size            (+ 3000 d)
                                             :size-compressed d})
                                  (take 10 (repeatedly #(rand-int 2500))))]
-           (r/as-element [bar-container data])))
+           (r/as-element [stateful-bar-chart data])))
+
+(defn stateful-tree-map
+  [data]
+  (let [opts {:title-string "Module : fake ( %s )"}
+        state (r/atom {:key :size})
+        chart-element (d3/container {:d3fn              (d3/tree-map! 800 300 data opts)
+                                     :containerCallback (fn keep-container-reference
+                                                          [chart-container]
+                                                          (swap! state assoc :container chart-container))})]
+    ; use watch to detect change since it exposes old and new state values
+    (add-watch state :change (fn [k s old new]
+                               (when (not= (:key old) (:key new))
+                                 (d3/tree-map-transition! data (:container @state) 800 300 (:key @state) 2000 opts))))
+    (fn [data]
+      (r/create-class
+        {:reagent-render (fn []
+                           [:div {}
+                            [:div {} "Chart showing: " (name (:key @state))]
+                            [:button {:onClick (fn [_]
+                                                 (swap! state assoc :key (if (= :size (:key @state))
+                                                                           :size-uncompiled
+                                                                           :size)))}
+                             "toggle"]
+                            [:div {} chart-element]])}))))
 
 (defcard tree-map
          (let [data {:name     "flare"
                      :children [{:name     "analytics"
-                                 :children [{:name     "cluster"
-                                             :children [{:name "agg" :size 2000}
-                                                        {:name "comm" :size 3000}
-                                                        {:name "heir" :size 4000}
-                                                        {:name "merge" :size 3000}]}
-                                            {:name     "graph"
-                                             :children [{:name "between" :size 3000}
-                                                        {:name "link" :size 8000}]}]}]}
-               opts {}]
-           (d3/container {:d3fn            (d3/tree-map! 800 300 data opts)
-                          ; below means all transitions in the treemap! fn must complete in 1sec
-                          :animateDuration 1000})))
+                                 :children [{:name "agg" :size 2000 :size-uncompiled 2000}
+                                            {:name "comm" :size 3000 :size-uncompiled 3000}
+                                            {:name "heir" :size 4000 :size-uncompiled 4000}
+                                            {:name "merge" :size 3000 :size-uncompiled 3000}]}
+                                {:name     "perf"
+                                 :children [{:name "css" :size 3000 :size-uncompiled 6000}
+                                            {:name "images" :size 8000 :size-uncompiled 15000}]}]}]
+           (r/as-element [stateful-tree-map data])))
 
 

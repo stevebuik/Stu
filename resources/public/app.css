@@ -7,6 +7,11 @@
     cursor: pointer;
 }
 
+.tree-map-title {
+    font-weight: bold;
+    margin-bottom: 1rem;
+}
+
 .toolTip {
     position: absolute;
     display: none;

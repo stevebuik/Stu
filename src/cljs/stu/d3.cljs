@@ -92,7 +92,7 @@
 
 (defn bar-chart-horizontal-transition!
   "generate a d3 transition by using the values. only supports update transitions i.e. no bar adds or removes."
-  [data container width height scale-key value-key duration]
+  [data container width scale-key value-key duration]
   (let [connect (.-connectFauxDOM (.-props container))      ; get connect fn from props
         animate (.-animateFauxDOM (.-props container))      ; get animate fn from props
         faux (connect "div" "chart")                        ; re-connect faux dom
@@ -113,25 +113,40 @@
     ; re-render of container using faux dom
     (animate duration)))
 
+(defn tree-map-dimensions
+  [svg-width svg-height legend-height legend-padding margin]
+  (let [legend-width 75
+        legend-offset (+ legend-height legend-padding)]
+    {:width  (- svg-width (:left margin) (:right margin))
+     :height (- svg-height (:top margin) (:bottom margin) legend-offset)}))
+
+(def margin {:top 20 :right 20 :bottom 20 :left 70})
+(def legend-width 75)
+
+(defn set-tree-map-node-id!
+  "set a hierarical id into a d3 node based on its ancenstors"
+  [d]
+  (set! (.. d -data -id)
+        (str (when (.-parent d)
+               (str (.. d -parent -data -id) "."))
+             (.. d -data -name))))
+
+(defn data-id
+  "return the id from a d3 javascript object"
+  [d] (.. d -data -id))
+
 (defn tree-map!
   "HOF returning a fn that mutates a dom div, adding a d3 tree-map"
-  [svg-width svg-height data {:keys [transition-duration legend-height legend-padding tooltip-content]
-                              :or   {legend-height  20
-                                     legend-padding 10
-                                     tooltip-content
-                                                    (fn [d]
-                                                      "<p>TODO Add content</p>")}}]
+  [svg-width svg-height data {:keys [value-key legend-height legend-padding tooltip-content title-string]
+                              :or   {value-key       :size
+                                     legend-height   20
+                                     legend-padding  10
+                                     tooltip-content (fn [d]
+                                                       "<p>TODO Add content</p>")}}]
   (fn [chart-div]
     ; ported from https://bl.ocks.org/mbostock/4063582
-    (let [legend-width 75
-          legend-offset (+ legend-height legend-padding)
-          svg (.. d3 (select chart-div)
-                  (append "svg")
-                  (attr "width" svg-width)
-                  (attr "height" svg-height))
-          margin {:top 20 :right 20 :bottom 20 :left 70}
-          width (- svg-width (:left margin) (:right margin))
-          height (- svg-height (:top margin) (:bottom margin) legend-offset)
+    (let [legend-offset (+ legend-height legend-padding)
+          {:keys [width height]} (tree-map-dimensions svg-width svg-height legend-height legend-padding margin)
           color (.. d3
                     (scaleOrdinal d3/schemeSet3)            ; https://github.com/d3/d3-scale-chromatic
                     (domain (clj->js (map :name (:children data))))) ; set the colors so they can be used in the legend as well
@@ -141,83 +156,150 @@
                       (paddingInner 1))
           root (.. d3
                    (hierarchy (clj->js data))               ; convert to d3 heirarchy object
-                   (eachBefore (fn [d]                      ; assign ids to nodes
-                                 (set! (.. d -data -id)
-                                       (str (when (.-parent d)
-                                              (str (.. d -parent -data -id) "."))
-                                            (.. d -data -name)))))
-                   ; set values in heirarchy
-                   (sum (fn [d] (.-size d))))]
+                   (eachBefore set-tree-map-node-id!)
+                   ; set values in heirarchy, using the value-key passed
+                   (sum (fn [d] (aget d (name value-key)))))]
 
-      (treemap root)                                        ; perform layout in heirarchy i.e. mutate it
+      (when title-string
+        (.. d3 (select chart-div)
+            (append "div")
+            (attr "class" "tree-map-title")
+            (attr "data-value" (.-value root))
+            (text (gstring/format title-string (size-string (.-value root))))))
 
-      (let [joined (.. svg
-                       (selectAll "g")
-                       (data (.. root leaves)))
-            cell (.. joined
-                     (enter)
-                     (append "g")
-                     (attr "transform" (fn [d] (str "translate(" (.-x0 d) "," (+ (.-y0 d) legend-offset) ")"))))
-            ; TODO tooltip div is duplicated after each re-render. how to fix this?
-            tool (.. d3
-                     (select "body")
-                     (append "div")
-                     (attr "class" "toolTip"))]
+      (let [svg (.. d3 (select chart-div)
+                    (append "svg")
+                    (attr "width" svg-width)
+                    (attr "height" svg-height))]
 
-        (.. cell
-            (append "rect")
-            (attr "id" (fn [d] (.. d -data -id)))
-            (attr "width" (fn [d] (- (.-x1 d) (.-x0 d))))
-            (attr "height" (fn [d] (- (.-y1 d) (.-y0 d))))
-            (attr "fill" (fn [d]                            ; parent is foo.bar but we set color domain using "bar" above
-                           (-> (.. d -parent -data -id)
-                               (str/split #"\.") (last)
-                               color)))
-            (on "mousemove" (fn [d]
-                              (.. tool
-                                  (style "top" (str (.. d3 -event -pageY) "px"))
-                                  (style "left" (str (.. d3 -event -pageX) "px"))
-                                  (style "display" "inline-block")
-                                  (html (tooltip-content d)))))
-            (on "mouseout" (fn [d]
-                             (.. tool
-                                 (style "display" "none")))))
+        (treemap root)                                      ; perform layout in heirarchy i.e. mutate it
 
-        (.. cell
-            (filter (fn [d]
-                      (let [width (- (.-x1 d) (.-x0 d))
-                            height (- (.-y1 d) (.-y0 d))]
-                        (and (> width 50) (> height 25)))))
-            (append "text")
-            (attr "x" 5)
-            (attr "y" 15)
-            (text (fn [d] (last (str/split (.. d -data -name) #"/"))))))
+        (let [joined (.. svg
+                         (selectAll ".cell")
+                         (data (.. root leaves)))
+              cells (.. joined
+                        (enter)
+                        (append "g")
+                        (attr "class" "cell")
+                        (attr "transform" (fn [d] (str "translate(" (.-x0 d) "," (+ (.-y0 d) legend-offset) ")"))))
+              tool (.. d3 (select "#tooltip"))
+              rects (.. cells
+                        (append "rect")
+                        (attr "class" "cell-rect")
+                        (attr "id" data-id)
+                        (attr "width" (fn [d] (- (.-x1 d) (.-x0 d))))
+                        (attr "height" (fn [d] (- (.-y1 d) (.-y0 d))))
+                        (attr "fill" (fn [d]                ; parent is foo.bar but we set color domain using "bar" above
+                                       (-> (.. d -parent -data -id)
+                                           (str/split #"\.") (last)
+                                           color)))
+                        (on "mousemove" (fn [d]
+                                          (.. tool
+                                              (style "top" (str (.. d3 -event -pageY) "px"))
+                                              (style "left" (str (.. d3 -event -pageX) "px"))
+                                              (style "display" "inline-block")
+                                              (html (tooltip-content d)))))
+                        (on "mouseout" (fn [d]
+                                         (.. tool
+                                             (style "display" "none")))))]
+          ; add text inside g to show a label
+          (.. cells
+              (filter (fn [d]
+                        (let [width (- (.-x1 d) (.-x0 d))
+                              height (- (.-y1 d) (.-y0 d))]
+                          (and (> width 50) (> height 25)))))
+              (append "text")
+              (attr "x" 5)
+              (attr "y" 15)
+              (text (fn [d] (last (str/split (.. d -data -name) #"/"))))))
 
-      (let [legend (.. svg
-                       (append "g")
-                       (selectAll "g")
-                       (data (.. color domain)))
-            legend-entries (.. legend
-                               (enter)
-                               (append "g")
-                               (attr "class" "legend")
-                               (attr "transform" (fn [d i]
-                                                   (str "translate(" (* i legend-width) ", 0)"))))
+        (let [legend (.. svg
+                         (append "g")
+                         (selectAll "g")
+                         (data (.. color domain)))
+              legend-entries (.. legend
+                                 (enter)
+                                 (append "g")
+                                 (attr "class" "legend")
+                                 (attr "transform" (fn [d i]
+                                                     (str "translate(" (* i legend-width) ", 0)"))))
 
-            legend-rects (.. legend-entries
-                             (append "rect")
-                             (attr "width" (str legend-width "px"))
-                             (attr "height" (str legend-height "px"))
-                             (attr "fill" color))
+              legend-rects (.. legend-entries
+                               (append "rect")
+                               (attr "width" (str legend-width "px"))
+                               (attr "height" (str legend-height "px"))
+                               (attr "fill" color))
 
-            legend-texts (.. legend-entries
-                             (append "text")
-                             (attr "x" 5)
-                             (attr "y" 15)
-                             (text identity))]))
+              legend-texts (.. legend-entries
+                               (append "text")
+                               (attr "x" 5)
+                               (attr "y" 15)
+                               (text identity))])))
 
     ; return nothing. side-effecting fn
     nil))
+
+(defn tree-map-transition!
+  "generate a d3 transition by using the values. only supports update transitions i.e. no cells adds or removes."
+  [data container svg-width svg-height value-key duration {:keys [legend-height legend-padding title-string]
+                                                           :or   {legend-height  20
+                                                                  legend-padding 10}}]
+  (let [connect (.-connectFauxDOM (.-props container))      ; get connect fn from props
+        animate (.-animateFauxDOM (.-props container))      ; get animate fn from props
+        faux (connect "div" "chart")                        ; re-connect faux dom
+        {:keys [width height]} (tree-map-dimensions svg-width svg-height legend-height legend-padding margin)
+        legend-offset (+ legend-height legend-padding)
+        treemap (.. d3 treemap
+                    (tile d3/treemapSquarify)
+                    (size (clj->js [width height]))
+                    (paddingInner 1))
+        root (.. d3 (hierarchy (clj->js data))              ; convert to d3 heirarchy object
+                 (eachBefore set-tree-map-node-id!)
+                 ; calculate values in hierarchy, using the value-key passed
+                 (sum (fn [d] (aget d (name value-key)))))]
+
+    (when title-string
+      (let [old-value (.. d3 (select faux)
+                          (select ".tree-map-title")
+                          (attr "data-value"))
+            new-value (.-value root)
+            diff (- new-value old-value)]
+        (.. d3 (select faux)
+            (select ".tree-map-title")
+            (attr "data-value" new-value)
+            (transition)
+            (duration duration)
+            (tween "text" (fn []
+                            (this-as this
+                              (fn [i]
+                                (.. (d3/select this)
+                                    (text (gstring/format title-string (size-string (+ old-value (* i diff)))))))))))))
+
+    (treemap root)                                          ; calc new layout
+
+    (let [cells (.. (d3/select faux)
+                    (selectAll ".cell")                     ; the g container
+                    ; re-join the new layout
+                    (data (.. root leaves) data-id))]
+
+      ; move the g containers to the new location
+      (.. cells
+          (transition)
+          (duration duration)
+          (attr "transform" (fn [d] (str "translate(" (.-x0 d) "," (+ (.-y0 d) legend-offset) ")"))))
+
+      ; concurrently, resize the rects inside the g
+      (.. (d3/select faux)
+          (selectAll ".cell-rect")                          ; the rects
+          ; re-join the new layout
+          (data (.. root leaves) data-id)
+          (transition)
+          (duration duration)
+          (attr "width" (fn [d] (- (.-x1 d) (.-x0 d))))
+          (attr "height" (fn [d] (- (.-y1 d) (.-y0 d))))))
+
+    ; re-render of container using faux dom
+    (animate duration)))
 
 ;;;; UTILS ;;;;
 
