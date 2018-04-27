@@ -101,7 +101,16 @@
 
 (defn watch-state-changes
   "respond to state changes that need to cause transitions in the d3 containers"
-  [k r old {:keys [:bar-chart-key :tree-map-key] :as new}]
+  [k r old {:keys [:source :bar-chart-key :tree-map-key :tree-map/height :tree-map/width] :as new}]
+
+  ; detect snapshot selection changes
+  (let [id (:snapshot/id @r)]                               ; TODO why is :snapshot/id not in new?
+    (when (and id (:snapshot/id old) (not= id (:snapshot/id old)))
+      (let [tree-maps (tree-maps! (snapshot source id)
+                                  r
+                                  width
+                                  height)]
+        (swap! r merge tree-maps))))
 
   ; detect bar chart transition
   (when-not (= bar-chart-key (:bar-chart-key old))
@@ -115,8 +124,7 @@
 
   ; detect tree-map transition
   (when-not (= tree-map-key (:tree-map-key old))
-    ;(js/console.log new)
-    (let [{:keys [:source :snapshot/id :tree-maps :tree-map/height :tree-map/width]} new
+    (let [{:keys [:source :snapshot/id :tree-maps]} new
           snap (snapshot source id)]
       (doseq [module-id (keys tree-maps)]
         (let [module-tree (->> snap
