@@ -67,7 +67,7 @@ Stu was built to answer questions about your javascript artifacts. All features 
 
 ## Design
 
-Stu is a reagent component which is passed protocol impl to provide data. That data is checking using a spec to ensure it's correct.
+Stu is a reagent component which is passed protocol impl to provide data. That data is checked using a spec to ensure it's correct.
 
 This provides two benefits:
 
@@ -104,8 +104,6 @@ but can also be used to test and develop itself. Examples include:
 
 ## Roadmap
 
-* transition/toggle between size and gzipped
-* transition/toggle between source and js size (shows closure value)
 * zoom transitions (clicks on groups or on legend)
 * how did that get in there? data is available in 2.3.5. make backward compatible
 * legend tooltips (size and %)
