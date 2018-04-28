@@ -18,11 +18,12 @@
   []
   (shadow/release :app)
   (fs/copy "resources/public/app/main.js" "resources/stu-app-release.js")
+  (fs/copy "resources/public/app/shared.js" "resources/stu-shared-release.js")
   (illuminate/generate-sample!))
 
 (comment
   ; change the tag below each time to create a snapshot history
-  (shadow/release-snapshot :app {:tag "0.8"})
+  (shadow/release-snapshot :app {:tag "0.9"})
 
   ; or this to generate "latest"
   (shadow/release-snapshot :app {})
