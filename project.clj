@@ -1,4 +1,4 @@
-(defproject stu "0.1.0-SNAPSHOT"
+(defproject stu "0.1.0"
   :description "Visualise builds of Clojurescript artifacts"
   :license {:name "Eclipse Public License"
             :url  "http://www.eclipse.org/legal/epl-v10.html"}
