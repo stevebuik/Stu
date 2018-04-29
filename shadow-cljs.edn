@@ -10,15 +10,16 @@
                                   :autoload  true           ; defaults true for :browser target
                                   :preloads  [devcards.core]}}
 
-          :app      {:target     :browser
-                     :output-dir "resources/public/app"     ; where does compilation output go
-                     :asset-path "/app"                     ; sets path to comiled assets in loader script
+          :app      {:target           :browser
+                     :output-dir       "resources/public/app" ; where does compilation output go
+                     :compiler-options {:externs ["resources/d3.externs.js"]}
+                     :asset-path       "/app"               ; sets path to comiled assets in loader script
 
                      ; simple code-splitting, puts all d3 code in a shared module
-                     :modules    {:main   {:entries    [stu.app]
-                                           :depends-on #{:shared}}
-                                  :shared {:entries [stu.d3]}}
+                     :modules          {:main   {:entries    [stu.app]
+                                                 :depends-on #{:shared}}
+                                        :shared {:entries [stu.d3]}}
 
-                     :devtools   {:http-root "resources/public"
-                                  :http-port 8290}}}}
+                     :devtools         {:http-root "resources/public"
+                                        :http-port 8290}}}}
 

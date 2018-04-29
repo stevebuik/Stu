@@ -23,7 +23,7 @@
 
 (comment
   ; change the tag below each time to create a snapshot history
-  (shadow/release-snapshot :app {:tag "0.9"})
+  (shadow/release-snapshot :app {:tag "1.0"})
 
   ; or this to generate "latest"
   (shadow/release-snapshot :app {})

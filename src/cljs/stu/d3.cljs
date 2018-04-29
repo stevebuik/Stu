@@ -3,7 +3,7 @@
     [goog.string :as gstring]
     [goog.string.format]                                    ; required or release compile will generate invalid js
     ["react-faux-dom" :as faux-dom]
-    ["d3" :as d3]
+    ["d3/dist/d3.min" :as d3]
     ["react" :as react]
     ["create-react-class" :as create-class]
     [clojure.string :as str]))
