@@ -53,7 +53,7 @@ The CLI will print the location of the generated file.
 
 ## Questions Stu can answer
 
-Stu was built to answer questions about your javascript artifacts. All features exist to these questions:
+Stu was built to answer questions about your javascript artifacts. All features exist to answer these questions:
 
 | Question | Feature |
 |----------|---------|
@@ -82,7 +82,7 @@ This provides two benefits:
     * cljs-build
 
 Stu uses [react faux dom](https://github.com/Olical/react-faux-dom) to simplify the use of D3 interop.
-Instead of worrying about how to handle D3s mutations vs Reacts purity, this allows the d3 interop code to be copied directly from javascript examples, including mutations.
+Instead of worrying about how to handle D3s join mutations vs Reacts dom diff based mutations, this allows the d3 interop code to be copied directly from javascript examples, including mutations.
 This makes the d3 charts much simpler to write.
 
 Using Stu on a large app with many snapshots could generate a large dataset.
