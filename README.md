@@ -16,6 +16,8 @@ Stu is invoked using the command line (or the REPL), intended to be run in a CI 
 
 Initially supports Shadow CLJS but can support any compilation source.
 
+[![Clojars Project](https://img.shields.io/clojars/v/stu.svg)](https://clojars.org/stu)
+
 ## Usage
 
 **Prerequisite**
@@ -34,7 +36,7 @@ In future this manual step [will be automated](https://github.com/stevebuik/Stu/
 
 **Illumination** (i.e. static file generation)
 
-Add the Stu dependency `[stu "0.1.0-SNAPSHOT"]`
+Add the Stu dependency `[stu "0.1.0"]`
 
 Then generate the html report, use the *illuminate* CLI.
 
