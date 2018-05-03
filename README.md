@@ -66,6 +66,7 @@ Stu was built to answer questions about your javascript artifacts. All features 
 |Is using minified npm deps reducing my artifact size?| The treemap|
 |How has my artifact grown over the last 10 weeks?| [TODO The snapshot generator](https://github.com/stevebuik/Stu/issues/2)|
 |How did that code end up in my artifact?| [TODO path data in tooltip](https://github.com/stevebuik/Stu/issues/4)|
+|Is there any code in my artifact that should not be there?| [TODO CLI checks for disallowed code](https://github.com/stevebuik/Stu/issues/12)|
 |Your question here?| TODO |
 
 All enhancement issues in this project should be written in terms of Question/Answer to ensure valuable features are added.
