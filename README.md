@@ -36,6 +36,12 @@ In future this manual step [will be automated](https://github.com/stevebuik/Stu/
 
 ### Illumination (i.e. static file generation)
 
+**CLI Options**
+
+    -h or --help shows this message
+    -d or --dir <directory> is the directory where Shadow snapshots are read from. defaults to .shadow-cljs/release-snapshots/app
+    -f or --file <file name> is the name of the file to be generated. defaults to target/stu.html
+
 **Leiningen**
 
 Add the Stu dependency `[stu "0.1.0"]` to your `project.clj`.
@@ -43,8 +49,6 @@ Add the Stu dependency `[stu "0.1.0"]` to your `project.clj`.
 Then generate the html report, use the *illuminate* CLI.
 
 `lein run -m stu.illuminate` invokes the command line with default args.
-
-`lein run -m stu.illuminate -h` provides docs and default values for args.
 
 **Deps**
 
@@ -56,8 +60,6 @@ Include a dependency on this project in your `deps.edn`. You will probably wish 
 Then generate the html report, use the *illuminate* CLI.
 
 `clj -Adev -m stu.illuminate` invokes the command line with default args.
-
-`clj -Adev -m stu.illuminate -h` provides docs and default values for args.
 
 **Other**
 
