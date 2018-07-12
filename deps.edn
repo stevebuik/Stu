@@ -1,0 +1,25 @@
+{:paths     ["src/clj" "src/cljc" "src/cljs" "resources"]
+ :deps      {org.clojure/clojure         {:mvn/version "1.9.0"}
+             org.clojure/data.json       {:mvn/version "0.2.6"}
+             org.clojure/spec.alpha      {:mvn/version "0.1.143"}
+             org.clojure/tools.namespace {:mvn/version "0.3.0-alpha4"}
+             org.clojure/tools.cli       {:mvn/version "0.3.6"}
+             com.cognitect/transit-clj   {:mvn/version "0.8.303"}
+             com.cognitect/transit-cljs  {:mvn/version "0.8.256"}
+             me.raynes/fs                {:mvn/version "1.4.6"}
+             reagent                     {:mvn/version "0.8.0-alpha2"
+                                          :exclusions  [cljsjs/create-react-class
+                                                        cljsjs/react-dom-server
+                                                        cljsjs/react-dom
+                                                        cljsjs/react
+                                                        org.clojure/clojurescript]}}
+ :aliases   {:dev {:extra-paths ["dev"]
+                   :extra-deps  {binaryage/devtools   {:mvn/version "0.9.8"}
+                                 thheller/shadow-cljs {:mvn/version "2.2.26"}
+                                 devcards             {:mvn/version "0.2.4"
+                                                       :exclusions  [cljsjs/react
+                                                                     cljsjs/react-dom
+                                                                     com.cognitect/transit-clj
+                                                                     com.cognitect/transit-cljs]}}}}
+ :mvn/repos {"central" {:url "https://repo1.maven.org/maven2/"}
+             "clojars" {:url "https://clojars.org/repo"}}}
