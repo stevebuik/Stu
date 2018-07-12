@@ -55,7 +55,7 @@ Then generate the html report, use the *illuminate* CLI.
 Include a dependency on this project in your `deps.edn`. You will probably wish to put it in a dev alias.
 
     {:aliases {:dev {:extra-deps {github-stevebuik/Stu {:git/url "https://github.com/stevebuik/Stu.git"
-                                                        :sha     "<latest-hash>"}}}}}
+                                                        :sha     "1a06621813209a17848ed43f9fd28e5471ddf36f"}}}}}
 
 Then generate the html report, use the *illuminate* CLI.
 
